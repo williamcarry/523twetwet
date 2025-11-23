@@ -1,0 +1,7 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block body %}
+<div {{ vue_component('admin/TranslationManager', {
+    'adminLoginPath': adminLoginPath
+}) }}></div>
+{% endblock %}

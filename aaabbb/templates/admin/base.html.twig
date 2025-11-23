@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {# 管理员后台样式入口 - 包含 admin.css #}
+    {{ encore_entry_link_tags('admin') }}
+{% endblock %}
+
+{% block javascripts %}
+    {# 管理员后台脚本入口 #}
+    {{ encore_entry_script_tags('admin') }}
+{% endblock %}
+
+{% block body %}
+{% if is_granted('ROLE_ADMIN') %}
+    {% set current_admin = app.user %}
+    <div {{ vue_component('admin/AdminLayout', {
+        'currentAdmin': {
+            'username': current_admin.username,
+            'email': current_admin.email,
+            'mark': current_admin.mark,
+            'roles': current_admin.roles
+        },
+        'adminLoginPath': app.request.get('adminLoginPath'),
+        'adminProfileUrl': path('admin_profile_edit', {'adminLoginPath': app.request.get('adminLoginPath')}),
+        'adminCreateUrl': path('admin_user_create_tab', {'adminLoginPath': app.request.get('adminLoginPath')})
+    }) }}></div>
+    {% block content %}{% endblock %}
+{% else %}
+    <div class="alert alert-warning">
+        需要登录才能访问此页面
+    </div>
+{% endif %}
+{% endblock %}

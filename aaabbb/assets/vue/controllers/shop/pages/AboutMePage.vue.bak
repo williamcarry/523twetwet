@@ -1,0 +1,730 @@
+<template>
+  <div class="about-saleyee-page">
+    <!-- 使用公用的网站头部 -->
+    <SiteHeader />
+
+    <!-- Main content -->
+    <main class="main">
+      <!-- Introduction section with background -->
+      <section class="intro-banner" :style="{ backgroundImage: `url(${introBannerUrl})` }">
+        <div class="intro-banner-inner">
+          <div class="intro-banner-content">
+            <h3>{{ t('introTitle') }}</h3>
+            <p>{{ t('introDescription') }}</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="container">
+
+        <!-- Business section -->
+        <section class="business-section">
+          <h2>{{ t('businessTitle') }}</h2>
+          <div class="business-content">
+            <img :src="businessImageUrl" :alt="t('businessImageAlt')" class="business-image" />
+          </div>
+        </section>
+
+        <!-- Services section -->
+        <section class="services-section">
+          <h2>{{ t('servicesTitle') }}</h2>
+          <div class="services-grid">
+            <!-- Service 1 (attachment layout) -->
+            <div class="service-block">
+              <img
+                :src="service1ImageUrl"
+                :alt="t('service1ImageAlt')"
+                loading="lazy"
+                class="service-img"
+              />
+              <div class="service-block-content">
+                <h3 class="service-title">{{ t('service1Title') }}</h3>
+                <span class="service-hr"></span>
+                <p class="service-desc">
+                  {{ t('service1Description') }}
+                </p>
+                <a href="/register" class="service-cta">
+                  {{ t('service1Cta') }}
+                </a>
+              </div>
+            </div>
+
+            <!-- Service 2 (supplier block matching attachment) -->
+            <div class="service-block supplier-block">
+              <div class="service-block-content">
+                <h3 class="service-title">{{ t('service2Title') }}</h3>
+                <span class="service-hr"></span>
+                <p class="service-desc">
+                  {{ t('service2Description') }}
+                </p>
+                <a href="/supplier" class="service-cta">
+                  {{ t('service2Cta') }}
+                </a>
+              </div>
+              <img
+                :src="service2ImageUrl"
+                :alt="t('service2ImageAlt')"
+                loading="lazy"
+                class="service-img"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Warehouse section -->
+        <section class="warehouse-section">
+          <h2>{{ t('warehouseTitle') }}</h2>
+          <div class="warehouse-wrapper" ref="warehouseWrapper">
+            <div class="warehouse-track" :style="trackStyle">
+              <div v-for="(w, idx) in warehouseImages" :key="idx" class="warehouse-item">
+                <img :src="w.src" :alt="t(w.nameKey)" class="warehouse-img" loading="lazy" />
+                <p class="warehouse-name">{{ t(w.nameKey) }}</p>
+              </div>
+            </div>
+
+            <button v-if="maxIndex > 0" class="carousel-button next" @click="nextWarehouse" :disabled="currentWarehouse >= maxIndex" :aria-label="t('nextSlideAriaLabel')">
+              <ChevronRightIcon size="24" />
+            </button>
+
+            <button v-if="maxIndex > 0" class="carousel-button prev" @click="prevWarehouse" :disabled="currentWarehouse === 0" :aria-label="t('prevSlideAriaLabel')">
+              <ChevronLeftIcon size="24" />
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- 使用公用的网站底部 -->
+    <SiteFooter />
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from 'lucide-vue-next'
+import SiteHeader from '../components/SiteHeader.vue'
+import SiteFooter from '../components/SiteFooter.vue'
+
+// 页面翻译数据
+const translations = ref({})
+
+// 当前语言
+const currentLang = ref('zh-CN')
+
+// 图片URL
+const introBannerUrl = '/frondend/images/AboutMePage/intro_banner.jpg'
+const businessImageUrl = '/frondend/images/AboutMePage/pattern.png'
+const service1ImageUrl = '/frondend/images/AboutMePage/about_service1.png'
+const service2ImageUrl = '/frondend/images/AboutMePage/about_service2.png'
+
+// 加载翻译文件
+const loadTranslations = async () => {
+  try {
+    const response = await fetch('/frondend/lang/AboutMePage.json')
+    const data = await response.json()
+    translations.value = data
+  } catch (error) {
+    console.error('Failed to load translations:', error)
+  }
+}
+
+// 翻译函数 - 直接从页面特定的JSON文件读取
+const t = (key) => {
+  // 获取当前语言，优先从localStorage获取，否则使用默认值
+  const lang = localStorage.getItem('app.lang') || currentLang.value
+  
+  // 从页面特定的翻译文件中获取翻译
+  if (translations.value[lang] && translations.value[lang][key]) {
+    return translations.value[lang][key]
+  }
+  
+  // 如果没有找到翻译，返回键名
+  return key
+}
+
+// 更新页面标题
+const updatePageTitle = () => {
+  const title = t('pageTitle')
+  if (title && title !== 'pageTitle') {
+    document.title = title
+  }
+}
+
+// 监听语言变化事件
+const handleLangChange = (event) => {
+  if (event.detail && event.detail.lang) {
+    currentLang.value = event.detail.lang
+  }
+  // 重新加载翻译以确保语言切换时更新
+  loadTranslations()
+  // 更新页面标题
+  updatePageTitle()
+}
+
+const currentWarehouse = ref(0)
+const warehouseWrapper = ref(null)
+const visibleCount = ref(1)
+
+const trackStyle = computed(() => ({
+  transform: `translateX(-${currentWarehouse.value * 304}px)`,
+  transition: 'transform 0.4s ease',
+}))
+
+const warehouseImages = [
+  { nameKey: 'warehouseName1', src: '/frondend/images/AboutMePage/warehouse2.png' },
+  { nameKey: 'warehouseName2', src: '/frondend/images/AboutMePage/warehouse1.png' },
+  { nameKey: 'warehouseName3', src: '/frondend/images/AboutMePage/warehouse5.png' },
+  { nameKey: 'warehouseName4', src: '/frondend/images/AboutMePage/warehouse3.png' },
+  { nameKey: 'warehouseName5', src: '/frondend/images/AboutMePage/warehouse4.png' },
+  { nameKey: 'warehouseName6', src: '/frondend/images/AboutMePage/warehouse7.png' },
+  { nameKey: 'warehouseName7', src: '/frondend/images/AboutMePage/warehouse6.png' }
+]
+
+const maxIndex = computed(() => Math.max(0, warehouseImages.length - visibleCount.value))
+
+function updateVisibleCount() {
+  const width = warehouseWrapper.value ? warehouseWrapper.value.clientWidth : window.innerWidth
+  const count = Math.max(1, Math.floor(width / 304))
+  visibleCount.value = count
+  if (currentWarehouse.value > maxIndex.value) {
+    currentWarehouse.value = maxIndex.value
+  }
+}
+
+onMounted(() => {
+  // 初始加载翻译
+  loadTranslations().then(() => {
+    // 翻译加载完成后设置标题
+    updatePageTitle()
+  })
+  updateVisibleCount()
+  window.addEventListener('resize', updateVisibleCount)
+  
+  // 监听语言变化事件
+  window.addEventListener('languagechange', handleLangChange)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateVisibleCount)
+  window.removeEventListener('languagechange', handleLangChange)
+})
+
+const nextWarehouse = () => {
+  if (currentWarehouse.value < maxIndex.value) {
+    currentWarehouse.value++
+  }
+}
+
+const prevWarehouse = () => {
+  if (currentWarehouse.value > 0) {
+    currentWarehouse.value--
+  }
+}
+</script>
+
+<style scoped>
+.about-saleyee-page {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  color: #2f2f2f;
+  background: #f7f9fb;
+  line-height: 1.5;
+}
+
+.container {
+  width: 100%;
+  max-width: 1500px;
+  min-width: 1150px;
+  margin: 0 auto;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   Main Area
+   ============================================================ */
+.main {
+  background: linear-gradient(180deg, #f7f9fb 0%, #ffffff 100%);
+
+  min-height: calc(100vh - 300px);
+}
+
+/* ============================================================
+   Banner
+   ============================================================ */
+.about-banner-wrapper {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  margin-bottom: 60px;
+  overflow: hidden;
+}
+
+.banner-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ============================================================
+   Introduction Banner Section
+   ============================================================ */
+.intro-banner {
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 750px;
+  background-color: rgba(0, 0, 0, 0);
+  margin-bottom: 80px;
+}
+
+.intro-banner-inner {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: space-between;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1500px;
+  min-width: 1200px;
+  position: relative;
+  width: 80%;
+}
+
+.intro-banner-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.intro-banner-content h3 {
+  border-color: rgb(203, 38, 28);
+  color: rgb(203, 38, 28);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 54px;
+  outline-color: rgb(203, 38, 28);
+  text-align: center;
+  text-decoration-color: rgb(203, 38, 28);
+  text-emphasis-color: rgb(203, 38, 28);
+  margin: 0 0 24px 0;
+}
+
+.intro-banner-content p {
+  border-color: rgb(255, 255, 255);
+  color: rgb(255, 255, 255);
+  font-size: 18px;
+  line-height: 36px;
+  outline-color: rgb(255, 255, 255);
+  text-decoration-color: rgb(255, 255, 255);
+  text-emphasis-color: rgb(255, 255, 255);
+  margin: 0;
+  max-width: 900px;
+}
+
+.intro-video {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+.intro-video video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ============================================================
+   Business Section
+   ============================================================ */
+.business-section {
+  margin-bottom: 80px;
+  text-align: center;
+}
+
+.business-section h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 40px;
+}
+
+.business-content {
+  display: flex;
+  justify-content: center;
+}
+
+.business-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+/* ============================================================
+   Services Section
+   ============================================================ */
+.services-section {
+  margin-bottom: 80px;
+}
+
+.services-section h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 40px;
+  text-align: center;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+}
+
+.service-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  background: #fff;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  transition: all 0.3s ease;
+}
+
+.service-card:hover {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+  transform: translateY(-4px);
+}
+
+.service-card:nth-child(2) {
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.service-card:nth-child(2) .service-content {
+  order: 1;
+}
+
+.service-card:nth-child(2) .service-image {
+  order: 2;
+}
+
+.service-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.service-content h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 16px;
+}
+
+.service-content p {
+  font-size: 15px;
+  color: #374151;
+  line-height: 1.8;
+  margin: 0 0 20px;
+}
+
+.service-link {
+  display: inline-block;
+  padding: 12px 32px;
+  background: #cb261c;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.service-link:hover {
+  background: #a81f18;
+  transform: translateY(-2px);
+}
+
+/* Custom service-block styles */
+.service-block {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  background-color: rgba(0, 0, 0, 0);
+  grid-column: 1 / -1;
+}
+.service-img {
+  max-width: 650px;
+  overflow-clip-margin: content-box;
+  overflow-x: clip;
+  overflow-y: clip;
+  vertical-align: middle;
+  width: 45%;
+}
+.service-block-content {
+  width: 50%;
+}
+.service-title {
+  border-color: rgb(51, 51, 51);
+  color: rgb(51, 51, 51);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 54px;
+  margin: 0 0 8px 0;
+}
+.service-hr {
+  background-color: rgb(51, 51, 51);
+  display: inline-block;
+  height: 4px;
+  margin-bottom: 30px;
+  margin-top: 15px;
+  width: 105px;
+}
+.service-desc {
+  font-size: 16px;
+  line-height: 30px;
+  margin-bottom: 20px;
+  color: #374151;
+}
+.service-cta {
+  background-color: rgb(203, 38, 28);
+  border-radius: 4px;
+  box-shadow: rgba(18, 21, 22, 0.1) 0px 10px 20px 0px;
+  color: rgb(255, 255, 255);
+  cursor: pointer;
+  display: inline-block;
+  font-size: 24px;
+  height: 65px;
+  line-height: 65px;
+  margin-top: 30px;
+  text-align: center;
+  text-decoration: none;
+  transition-duration: 0.3s;
+  width: 253px;
+}
+
+/* ============================================================
+   Warehouse Section
+   ============================================================ */
+.warehouse-section {
+  margin-bottom: 80px;
+  text-align: center;
+}
+
+.warehouse-section h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 40px;
+}
+
+.warehouse-carousel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: #fff;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.carousel-button {
+  width: 48px;
+  height: 48px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+.carousel-button:hover:not(:disabled) {
+  background: #cb261c;
+  color: #fff;
+  border-color: #cb261c;
+}
+
+.carousel-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Position arrows overlayed on the carousel */
+.carousel-button.next {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+}
+.carousel-button.prev {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+}
+
+.carousel-content {
+  flex: 1;
+  max-width: 600px;
+}
+
+.warehouse-image {
+  width: 100%;
+  height: auto;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.warehouse-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+/* New track styles for multi-item carousel */
+.warehouse-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+.warehouse-track {
+  display: flex;
+  align-items: center;
+  transition: transform 0.4s ease;
+  will-change: transform;
+}
+.warehouse-item {
+  width: 284px;
+  margin-right: 20px;
+  text-align: center;
+  flex: 0 0 auto;
+}
+.warehouse-img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   Responsive Design
+   ============================================================ */
+@media (max-width: 768px) {
+  .intro-content {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .intro-text h2 {
+    font-size: 24px;
+  }
+
+  .intro-text p {
+    font-size: 14px;
+  }
+
+  .business-section h2,
+  .services-section h2,
+  .warehouse-section h2 {
+    font-size: 24px;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .service-card:nth-child(2) {
+    grid-template-columns: 1fr;
+  }
+
+  .service-card:nth-child(2) .service-content {
+    order: 0;
+  }
+
+  .service-card:nth-child(2) .service-image {
+    order: 1;
+  }
+
+  .warehouse-carousel {
+    gap: 12px;
+    padding: 24px;
+  }
+
+  .carousel-button {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 12px;
+  }
+
+  .about-banner-wrapper {
+    margin-bottom: 40px;
+  }
+
+  .intro-section,
+  .business-section,
+  .services-section,
+  .warehouse-section {
+    margin-bottom: 50px;
+  }
+
+  .intro-text h2,
+  .business-section h2,
+  .services-section h2,
+  .warehouse-section h2 {
+    font-size: 20px;
+  }
+
+  .intro-text p {
+    font-size: 13px;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .service-card {
+    padding: 20px;
+  }
+
+  .service-content h3 {
+    font-size: 18px;
+  }
+
+  .service-content p {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .warehouse-carousel {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .carousel-button {
+    display: none;
+  }
+}
+</style>

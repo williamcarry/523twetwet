@@ -1,0 +1,1702 @@
+<template>
+  <div class="factory-inquiry-container">
+    <!-- 页面标题和刷新按钮 -->
+    <div class="page-header">
+      <div class="header-left">
+        <h2 class="text-2xl font-bold text-gray-800">{{ t('factoryInquiryTitle') }}</h2>
+        <p class="text-sm text-gray-500 mt-1">{{ t('factoryInquirySubtitle') }}</p>
+      </div>
+      <div class="header-right">
+        <button 
+          class="btn-refresh"
+          :disabled="loading"
+          @click="handleRefresh"
+          :title="t('refresh')"
+        >
+          <svg 
+            class="refresh-icon" 
+            :class="{ 'spinning': loading }"
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="2"
+          >
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+          <span class="refresh-text">{{ t('refresh') }}</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 询价单列表 -->
+    <div class="inquiry-list">
+      <!-- 空状态 -->
+      <div v-if="inquiries.length === 0 && !loading" class="empty-state">
+        <div class="empty-icon">
+          <FileText class="w-16 h-16 text-gray-300" />
+        </div>
+        <p class="text-gray-500 mt-4">{{ t('noInquiries') }}</p>
+        <p class="text-sm text-gray-400 mt-2">{{ t('noInquiriesHint') }}</p>
+      </div>
+      
+      <!-- 表格列表 -->
+      <div v-else class="inquiry-table-wrapper">
+        <table class="inquiry-table">
+          <thead>
+            <tr>
+              <th class="text-center" style="width: 60px;">{{ t('serialNumber') }}</th>
+              <th>{{ t('productInfo') }}</th>
+              <th>{{ t('inquiryNo') }}</th>
+              <th>{{ t('quantity') }}</th>
+              <th>{{ t('contactInfo') }}</th>
+              <th>{{ t('submitTime') }}</th>
+              <th>{{ t('status') }}</th>
+              <th>{{ t('actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr 
+              v-for="(inquiry, index) in inquiries" 
+              :key="inquiry.inquiryNo"
+              class="inquiry-row"
+            >
+              <!-- 序号列 -->
+              <td class="text-center serial-number">
+                {{ (currentPage - 1) * pageSize + index + 1 }}
+              </td>
+              
+              <!-- 商品信息列 -->
+              <td class="product-cell">
+                <div class="flex items-start gap-3">
+                  <!-- 缩略图 -->
+                  <div 
+                    class="thumbnail cursor-pointer"
+                    @click="openProductDetail(inquiry.productId)"
+                  >
+                    <img 
+                      :src="inquiry.productMainImage" 
+                      :alt="inquiry.productTitle"
+                      class="w-full h-full object-cover rounded"
+                    />
+                  </div>
+                  <!-- 标题和SKU -->
+                  <div class="flex-1 min-w-0">
+                    <h3 
+                      class="product-title cursor-pointer hover:text-red-600"
+                      @click="openProductDetail(inquiry.productId)"
+                      :title="currentLang === 'zh-CN' ? inquiry.productTitle : inquiry.productTitleEn"
+                    >
+                      {{ currentLang === 'zh-CN' ? inquiry.productTitle : inquiry.productTitleEn }}
+                    </h3>
+                    <p class="product-sku">
+                      SKU: {{ inquiry.productSku }}
+                    </p>
+                  </div>
+                </div>
+              </td>
+              
+              <!-- 询价单号列 -->
+              <td class="text-center">
+                <span class="inquiry-no">{{ inquiry.inquiryNo }}</span>
+              </td>
+              
+              <!-- 数量列 -->
+              <td class="text-center">
+                <span class="quantity">{{ inquiry.inquiryQuantity }}</span>
+              </td>
+              
+              <!-- 联系信息列 -->
+              <td>
+                <div class="contact-info">
+                  <p class="contact-name">{{ inquiry.contactName }}</p>
+                  <p class="contact-phone">{{ inquiry.contactPhone }}</p>
+                </div>
+              </td>
+              
+              <!-- 提交时间列 -->
+              <td class="text-center">
+                <span class="submit-time">{{ formatDate(inquiry.createdAt) }}</span>
+              </td>
+              
+              <!-- 状态列 -->
+              <td class="text-center">
+                <span 
+                  :class="[
+                    'status-badge',
+                    inquiry.status === 'PENDING' ? 'status-pending' : 'status-completed'
+                  ]"
+                >
+                  {{ t(inquiry.status === 'PENDING' ? 'statusPending' : 'statusCompleted') }}
+                </span>
+              </td>
+              
+              <!-- 操作列 -->
+              <td class="text-center">
+                <button 
+                  class="btn-view-detail"
+                  @click="viewDetail(inquiry.inquiryNo)"
+                >
+                  {{ t('viewDetail') }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- 分页组件 -->
+    <div class="pagination-wrapper">
+      <Pagination 
+        v-if="totalPages > 1"
+        :current-page="currentPage"
+        :total-pages="totalPages"
+        :change-page="handlePageChange"
+      />
+    </div>
+    
+    <!-- 加载状态 -->
+    <div v-if="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p class="text-gray-500 mt-4">{{ t('loading') }}</p>
+    </div>
+    
+    <!-- 详情弹窗 -->
+    <div v-if="showDetailDialog" class="detail-dialog-overlay" @click.self="closeDetailDialog">
+      <div class="detail-dialog">
+        <!-- 弹窗头部 -->
+        <div class="dialog-header">
+          <h3 class="dialog-title">{{ t('inquiryDetail') }}</h3>
+          <button class="dialog-close" @click="closeDetailDialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- 加载中 -->
+        <div v-if="loadingDetail" class="dialog-loading">
+          <div class="loading-spinner"></div>
+          <p class="text-gray-500 mt-4">{{ t('loading') }}</p>
+        </div>
+        
+        <!-- 详情内容 -->
+        <div v-else-if="currentInquiry" class="dialog-content">
+          <!-- 询价单信息 -->
+          <div class="detail-section">
+            <h4 class="section-title">{{ t('inquiryInfo') }}</h4>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="item-label">{{ t('inquiryNo') }}</span>
+                <span class="item-value inquiry-no">{{ currentInquiry.inquiryNo }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="item-label">{{ t('submitTime') }}</span>
+                <span class="item-value">{{ formatDate(currentInquiry.createdAt) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="item-label">{{ t('status') }}</span>
+                <span 
+                  :class="[
+                    'status-badge',
+                    currentInquiry.status === 'PENDING' ? 'status-pending' : 'status-completed'
+                  ]"
+                >
+                  {{ t(currentInquiry.status === 'PENDING' ? 'statusPending' : 'statusCompleted') }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 商品信息 -->
+          <div class="detail-section">
+            <h4 class="section-title">{{ t('productInfo') }}</h4>
+            <div class="product-detail">
+              <img 
+                :src="currentInquiry.productMainImage" 
+                :alt="currentInquiry.productTitle"
+                class="product-image"
+                @click="openProductDetail(currentInquiry.productId)"
+              />
+              <div class="product-info">
+                <h5 
+                  class="product-name"
+                  @click="openProductDetail(currentInquiry.productId)"
+                >
+                  {{ currentLang === 'zh-CN' ? currentInquiry.productTitle : currentInquiry.productTitleEn }}
+                </h5>
+                <p class="product-sku">SKU: {{ currentInquiry.productSku }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 询价信息 -->
+          <div class="detail-section">
+            <h4 class="section-title">{{ t('inquiryDetails') }}</h4>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="item-label">{{ t('contactName') }}</span>
+                <span class="item-value">{{ currentInquiry.contactName }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="item-label">{{ t('contactPhone') }}</span>
+                <span class="item-value">{{ currentInquiry.contactPhone }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="item-label">{{ t('quantity') }}</span>
+                <span class="item-value quantity">{{ currentInquiry.inquiryQuantity }}</span>
+              </div>
+            </div>
+            <div class="detail-item full-width" v-if="currentInquiry.requirementDescription">
+              <span class="item-label">{{ t('requirementDescription') }}</span>
+              <p class="item-value description">{{ currentInquiry.requirementDescription }}</p>
+            </div>
+          </div>
+          
+          <!-- 报价信息（只在有报价时显示） -->
+          <div class="detail-section" v-if="hasQuoteInfo(currentInquiry)">
+            <h4 class="section-title quote-section-title">{{ t('quoteInfo') }}</h4>
+            <div class="quote-info-box">
+              <div class="detail-grid">
+                <div class="detail-item" v-if="currentInquiry.quotedPrice">
+                  <span class="item-label">{{ t('quotedPrice') }}</span>
+                  <span class="item-value quote-price">{{ formatPrice(currentInquiry.quotedPrice) }}</span>
+                </div>
+                <div class="detail-item" v-if="currentInquiry.quotedCurrency">
+                  <span class="item-label">{{ t('quotedCurrency') }}</span>
+                  <span class="item-value">{{ formatCurrency(currentInquiry.quotedCurrency) }}</span>
+                </div>
+                <div class="detail-item" v-if="currentInquiry.quotedTotal">
+                  <span class="item-label">{{ t('quotedTotal') }}</span>
+                  <span class="item-value quote-total">{{ formatPrice(currentInquiry.quotedTotal) }}</span>
+                </div>
+                <div class="detail-item" v-if="currentInquiry.quotedAt">
+                  <span class="item-label">{{ t('quotedAt') }}</span>
+                  <span class="item-value">{{ formatDate(currentInquiry.quotedAt) }}</span>
+                </div>
+              </div>
+              <div class="detail-item full-width" v-if="currentInquiry.quotedRemark">
+                <span class="item-label">{{ t('quotedRemark') }}</span>
+                <p class="item-value quote-remark">{{ currentInquiry.quotedRemark }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 附件列表 -->
+          <div class="detail-section" v-if="currentInquiry.attachments && currentInquiry.attachments.length > 0">
+            <h4 class="section-title">{{ t('attachments') }} ({{ currentInquiry.attachments.length }})</h4>
+            <div class="attachments-list">
+              <div 
+                v-for="(attachment, index) in currentInquiry.attachments" 
+                :key="index"
+                class="attachment-card"
+              >
+                <!-- 图片附件 -->
+                <div v-if="isImage(attachment.type, attachment.name)" class="attachment-content">
+                  <!-- 左侧图片预览 -->
+                  <div class="attachment-preview" @click="openImagePreview(index)">
+                    <img 
+                      :src="attachment.url" 
+                      :alt="attachment.name"
+                      class="preview-thumbnail"
+                    />
+                  </div>
+                  <!-- 右侧信息 -->
+                  <div class="attachment-details">
+                    <div class="attachment-header">
+                      <p class="attachment-title" :title="attachment.name">{{ attachment.name }}</p>
+                    </div>
+                    <div class="attachment-footer">
+                      <button 
+                        class="btn-download"
+                        @click="downloadAttachment(attachment)"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        {{ t('download') }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- 非图片附件 -->
+                <div v-else class="attachment-content">
+                  <!-- 左侧文件图标 -->
+                  <div class="attachment-preview file-preview">
+                    <div class="file-icon-large">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                        <polyline points="13 2 13 9 20 9"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <!-- 右侧信息 -->
+                  <div class="attachment-details">
+                    <div class="attachment-header">
+                      <p class="attachment-title" :title="attachment.name">{{ attachment.name }}</p>
+                    </div>
+                    <div class="attachment-footer">
+                      <button 
+                        class="btn-download"
+                        @click="downloadAttachment(attachment)"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        {{ t('download') }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 暂无附件提示 -->
+          <div class="detail-section" v-else>
+            <h4 class="section-title">{{ t('attachments') }}</h4>
+            <p class="text-gray-500 text-sm">{{ t('noAttachments') }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 图片预览弹窗 -->
+    <div v-if="showImagePreview" class="image-preview-overlay" @click.self="closeImagePreview">
+      <div class="image-preview-container">
+        <!-- 关闭按钮 -->
+        <button class="preview-close" @click="closeImagePreview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+        
+        <!-- 上一张按钮 -->
+        <button 
+          v-if="imageList.length > 1" 
+          class="preview-nav preview-prev"
+          @click="prevImage"
+          :disabled="currentImageIndex === 0"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        
+        <!-- 图片显示 -->
+        <div class="preview-image-wrapper">
+          <img :src="imageList[currentImageIndex]?.url" :alt="imageList[currentImageIndex]?.name" class="preview-image" />
+          <div class="preview-info">
+            <p class="preview-name">{{ imageList[currentImageIndex]?.name }}</p>
+            <p class="preview-counter" v-if="imageList.length > 1">{{ currentImageIndex + 1 }} / {{ imageList.length }}</p>
+          </div>
+        </div>
+        
+        <!-- 下一张按钮 -->
+        <button 
+          v-if="imageList.length > 1" 
+          class="preview-nav preview-next"
+          @click="nextImage"
+          :disabled="currentImageIndex === imageList.length - 1"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { FileText } from 'lucide-vue-next'
+import Pagination from './Pagination.vue'
+import apiSignature from '../services/apiSignature.js'
+
+// 翻译数据
+const translations = ref({})
+const currentLang = ref('zh-CN')
+
+// 数据状态
+const inquiries = ref([])
+const loading = ref(false)
+const currentPage = ref(1)
+const totalPages = ref(0)
+const pageSize = 20
+
+// 加载翻译文件
+const loadTranslations = async () => {
+  try {
+    const response = await fetch('/frondend/lang/FactoryInquiryPage.json')
+    const data = await response.json()
+    translations.value = data
+    
+    // 更新当前语言
+    const storedLang = localStorage.getItem('app.lang')
+    if (storedLang) {
+      currentLang.value = storedLang
+    }
+  } catch (error) {
+    console.error('Failed to load translations:', error)
+  }
+}
+
+// 翻译函数
+const t = (key) => {
+  const lang = currentLang.value
+  if (translations.value[lang] && translations.value[lang][key]) {
+    return translations.value[lang][key]
+  }
+  return key
+}
+
+// 监听语言变化
+const handleLangChange = (event) => {
+  if (event.detail && event.detail.lang) {
+    currentLang.value = event.detail.lang
+  }
+  loadTranslations()
+}
+
+// 加载询价单列表
+const loadInquiries = async () => {
+  loading.value = true
+  try {
+    const params = {
+      page: currentPage.value,
+      pageSize: pageSize
+    }
+    
+    // 生成签名
+    const signedData = apiSignature.sign(params)
+    
+    // 构建URL参数
+    const queryParams = new URLSearchParams(signedData).toString()
+    
+    const response = await fetch(`/shop/api/inquiry/list?${queryParams}`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      inquiries.value = result.data || []
+      totalPages.value = Math.ceil(result.total / pageSize)
+    } else {
+      // 根据当前语言显示错误消息
+      const errorMsg = currentLang.value === 'zh-CN' ? result.message : result.messageEn
+      console.error('Failed to load inquiries:', errorMsg)
+    }
+  } catch (error) {
+    console.error('Error loading inquiries:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 分页处理
+const handlePageChange = (page) => {
+  currentPage.value = page
+  loadInquiries()
+  // 滚动到顶部
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// 刷新数据
+const handleRefresh = () => {
+  currentPage.value = 1
+  loadInquiries()
+}
+
+// 打开商品详情（新标签页）
+const openProductDetail = (productId) => {
+  window.open(`/shop/item/${productId}`, '_blank')
+}
+
+// 查看询价单详情
+const showDetailDialog = ref(false)
+const currentInquiry = ref(null)
+const loadingDetail = ref(false)
+
+const viewDetail = async (inquiryNo) => {
+  loadingDetail.value = true
+  showDetailDialog.value = true
+  currentInquiry.value = null
+  
+  try {
+    const params = { inquiryNo }
+    const signedData = apiSignature.sign(params)
+    const queryParams = new URLSearchParams(signedData).toString()
+    
+    const response = await fetch(`/shop/api/inquiry/detail/${inquiryNo}?${queryParams}`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      currentInquiry.value = result.data
+    } else {
+      const errorMsg = currentLang.value === 'zh-CN' ? result.message : result.messageEn
+      console.error('Failed to load detail:', errorMsg)
+      showDetailDialog.value = false
+    }
+  } catch (error) {
+    console.error('Error loading detail:', error)
+    showDetailDialog.value = false
+  } finally {
+    loadingDetail.value = false
+  }
+}
+
+const closeDetailDialog = () => {
+  showDetailDialog.value = false
+  currentInquiry.value = null
+}
+
+// 图片预览
+const showImagePreview = ref(false)
+const imageList = ref([])  // 所有图片列表
+const currentImageIndex = ref(0)  // 当前显示的图片索引
+
+const openImagePreview = (index) => {
+  // 获取点击的附件
+  const allAttachments = currentInquiry.value.attachments
+  const clickedAttachment = allAttachments[index]
+  
+  // 检查是否为图片，如果不是图片则不打开预览
+  if (!isImage(clickedAttachment.type, clickedAttachment.name)) {
+    console.log('附件不是图片类型，无法预览')
+    return
+  }
+  
+  // 筛选出所有图片附件
+  imageList.value = allAttachments.filter(att => isImage(att.type, att.name))
+  
+  // 找到当前点击的图片在图片列表中的位置
+  currentImageIndex.value = imageList.value.findIndex(img => img.url === clickedAttachment.url)
+  
+  // 如果找不到，默认显示第一张
+  if (currentImageIndex.value === -1) {
+    currentImageIndex.value = 0
+  }
+  
+  showImagePreview.value = true
+}
+
+const closeImagePreview = () => {
+  showImagePreview.value = false
+  imageList.value = []
+  currentImageIndex.value = 0
+}
+
+// 上一张图片
+const prevImage = () => {
+  if (currentImageIndex.value > 0) {
+    currentImageIndex.value--
+  }
+}
+
+// 下一张图片
+const nextImage = () => {
+  if (currentImageIndex.value < imageList.value.length - 1) {
+    currentImageIndex.value++
+  }
+}
+
+// 键盘事件：左右箭头切换图片，ESC关闭
+const handleKeydown = (event) => {
+  if (!showImagePreview.value) return
+  
+  if (event.key === 'ArrowLeft') {
+    prevImage()
+  } else if (event.key === 'ArrowRight') {
+    nextImage()
+  } else if (event.key === 'Escape') {
+    closeImagePreview()
+  }
+}
+
+// 下载附件
+const downloadAttachment = (attachment) => {
+  try {
+    // 直接使用后端签名后的URL下载
+    const a = document.createElement('a')
+    a.href = attachment.url  // 使用后端签名后的URL
+    a.download = attachment.name
+    a.target = '_blank'  // 在新标签页打开
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  } catch (error) {
+    console.error('Download failed:', error)
+  }
+}
+
+// 判断是否为图片（同时支持MIME类型和文件后缀名判断）
+const isImage = (type, name) => {
+  // 1. 先检查MIME类型
+  if (type && type.startsWith('image/')) {
+    return true
+  }
+  
+  // 2. 如果MIME类型不可靠，检查文件后缀名
+  if (name) {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg']
+    const lowerName = name.toLowerCase()
+    return imageExtensions.some(ext => lowerName.endsWith(ext))
+  }
+  
+  return false
+}
+
+// 格式化日期
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  const lang = currentLang.value === 'zh-CN' ? 'zh-CN' : 'en-US'
+  return date.toLocaleString(lang, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// 判断是否有报价信息
+const hasQuoteInfo = (inquiry) => {
+  return inquiry && (
+    inquiry.quotedPrice || 
+    inquiry.quotedTotal || 
+    inquiry.quotedRemark ||
+    inquiry.quotedAt
+  )
+}
+
+// 格式化价格
+const formatPrice = (price) => {
+  if (!price) return '-'
+  return parseFloat(price).toFixed(2)
+}
+
+// 格式化货币
+const formatCurrency = (currency) => {
+  if (!currency) return '-'
+  const currencyMap = {
+    'CNY': t('currencyCNY'),
+    'USD': t('currencyUSD'),
+    'EUR': t('currencyEUR')
+  }
+  return currencyMap[currency] || currency
+}
+
+// 组件挂载
+onMounted(() => {
+  loadTranslations()
+  loadInquiries()
+  window.addEventListener('languagechange', handleLangChange)
+  window.addEventListener('keydown', handleKeydown)  // 添加键盘事件
+})
+
+// 组件卸载
+onBeforeUnmount(() => {
+  window.removeEventListener('languagechange', handleLangChange)
+  window.removeEventListener('keydown', handleKeydown)  // 移除键盘事件
+})
+</script>
+
+<style scoped>
+/* 容器样式 */
+.factory-inquiry-container {
+  position: relative;
+  background-color: white;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  padding: 24px;
+}
+
+/* 页面标题 */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-right {
+  flex-shrink: 0;
+}
+
+/* 刷新按钮 */
+.btn-refresh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  outline: none;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  background-color: #f9fafb;
+  border-color: #cb261c;
+  color: #cb261c;
+}
+
+.btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refresh-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.refresh-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.refresh-text {
+  white-space: nowrap;
+}
+
+/* 询价单列表 */
+.inquiry-list {
+  position: relative;
+  min-height: 400px;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+}
+
+.empty-icon {
+  background-color: #f9fafb;
+  border-radius: 50%;
+  padding: 24px;
+}
+
+/* 表格容器 */
+.inquiry-table-wrapper {
+  overflow-x: auto;
+}
+
+/* 表格样式 */
+.inquiry-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inquiry-table thead {
+  background-color: #f9fafb;
+}
+
+.inquiry-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.inquiry-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.3s;
+}
+
+.inquiry-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.inquiry-table td {
+  padding: 16px;
+  font-size: 14px;
+  color: #374151;
+}
+
+/* 序号列 */
+.serial-number {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* 商品信息单元格 */
+.product-cell {
+  max-width: 400px;
+}
+
+/* 缩略图 */
+.thumbnail {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  transition: box-shadow 0.3s;
+}
+
+.thumbnail:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* 商品标题 */
+.product-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.3s;
+}
+
+/* 商品SKU */
+.product-sku {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* 询价单号 */
+.inquiry-no {
+  font-size: 14px;
+  font-family: monospace;
+  color: #374151;
+}
+
+/* 数量 */
+.quantity {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* 联系信息 */
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contact-name {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.contact-phone {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* 提交时间 */
+.submit-time {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 状态标签 */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-completed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+/* 查看详情按钮 */
+.btn-view-detail {
+  padding: 6px 16px;
+  background-color: #cb261c;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-view-detail:hover {
+  background-color: #a61e16;
+}
+
+/* 加载状态 */
+.loading-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #fecaca;
+  border-top-color: #cb261c;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 分页容器 */
+.pagination-wrapper {
+  margin-top: 32px;
+}
+
+/* 响应式调整 - 移动端使用卡片式布局 */
+@media (max-width: 1024px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .header-right {
+    width: 100%;
+  }
+  
+  .btn-refresh {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .inquiry-table-wrapper {
+    overflow: visible;
+  }
+  
+  .inquiry-table {
+    display: block;
+  }
+  
+  .inquiry-table thead {
+    display: none;
+  }
+  
+  .inquiry-table tbody {
+    display: block;
+  }
+  
+  .inquiry-table tbody tr {
+    display: block;
+    margin-bottom: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+  }
+  
+  .inquiry-table td {
+    display: block;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  .inquiry-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #6b7280;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+  
+  .inquiry-table td:last-child {
+    border-bottom: 0;
+  }
+  
+  .product-cell {
+    max-width: none;
+  }
+}
+
+/* ==================== 详情弹窗样式 ==================== */
+
+/* 弹窗遮罩 */
+.detail-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 弹窗容器 */
+.detail-dialog {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 弹窗头部 */
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.dialog-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.dialog-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  background-color: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.dialog-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.dialog-close:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+/* 弹窗内容区 */
+.dialog-content {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* 加载状态 */
+.dialog-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+}
+
+/* 详情区块 */
+.detail-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.detail-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* 详情网格 */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.item-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.item-value {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 400;
+}
+
+.item-value.description {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+.item-value.quantity {
+  font-weight: 600;
+  color: #cb261c;
+}
+
+/* 报价信息样式 */
+.quote-section-title {
+  color: #cb261c;
+}
+
+.quote-info-box {
+  background-color: #fef2f2;
+  border: 2px solid #fecaca;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.item-value.quote-price,
+.item-value.quote-total {
+  font-size: 16px;
+  font-weight: 700;
+  color: #cb261c;
+}
+
+.item-value.quote-remark {
+  background-color: white;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  margin-top: 8px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+/* 商品详情 */
+.product-detail {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.product-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: box-shadow 0.3s;
+  flex-shrink: 0;
+}
+
+.product-image:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.product-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #111827;
+  margin: 0 0 8px 0;
+  cursor: pointer;
+  transition: color 0.3s;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-name:hover {
+  color: #cb261c;
+}
+
+.product-sku {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  font-family: monospace;
+}
+
+/* 附件列表 */
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 附件卡片 */
+.attachment-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #fff;
+  transition: all 0.3s;
+  overflow: hidden;
+}
+
+.attachment-card:hover {
+  border-color: #cb261c;
+  box-shadow: 0 2px 8px rgba(203, 38, 28, 0.1);
+}
+
+/* 附件内容 */
+.attachment-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+}
+
+/* 附件预览区（左侧） */
+.attachment-preview {
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.attachment-preview:hover {
+  transform: scale(1.05);
+}
+
+/* 图片缩略图 */
+.preview-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 文件预览 */
+.file-preview {
+  cursor: default;
+}
+
+.file-preview:hover {
+  transform: none;
+}
+
+.file-icon-large {
+  width: 56px;
+  height: 56px;
+  color: #9ca3af;
+}
+
+.file-icon-large svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* 附件详情区（右侧） */
+.attachment-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* 附件头部（标题） */
+.attachment-header {
+  flex: 1;
+}
+
+.attachment-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.5;
+}
+
+/* 附件底部（下载按钮） */
+.attachment-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-download {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background-color: #cb261c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-download svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-download:hover {
+  background-color: #a61e16;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(203, 38, 28, 0.2);
+}
+
+/* ==================== 图片预览弹窗 ==================== */
+
+.image-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.95);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s;
+}
+
+.image-preview-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 关闭按钮 */
+.preview-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  padding: 0;
+  z-index: 10;
+}
+
+.preview-close svg {
+  width: 24px;
+  height: 24px;
+}
+
+.preview-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: rotate(90deg);
+}
+
+/* 左右切换按钮 */
+.preview-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  padding: 0;
+  z-index: 10;
+}
+
+.preview-nav svg {
+  width: 28px;
+  height: 28px;
+}
+
+.preview-nav:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.preview-nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.preview-prev {
+  left: 40px;
+}
+
+.preview-next {
+  right: 40px;
+}
+
+/* 图片容器 */
+.preview-image-wrapper {
+  max-width: 90%;
+  max-height: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: calc(90vh - 80px);
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* 图片信息 */
+.preview-info {
+  text-align: center;
+  color: white;
+}
+
+.preview-name {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.preview-counter {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  font-family: monospace;
+}
+
+/* 响应式调整 - 图片预览 */
+@media (max-width: 768px) {
+  .preview-close {
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .preview-close svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .preview-nav {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .preview-nav svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .preview-prev {
+    left: 10px;
+  }
+  
+  .preview-next {
+    right: 10px;
+  }
+  
+  .preview-image-wrapper {
+    max-width: 95%;
+    max-height: 95%;
+  }
+  
+  .preview-image {
+    max-height: calc(90vh - 60px);
+  }
+  
+  .preview-name {
+    font-size: 14px;
+  }
+  
+  .preview-counter {
+    font-size: 12px;
+  }
+}
+
+/* 响应式调整 - 详情弹窗 */
+@media (max-width: 768px) {
+  .detail-dialog {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+  
+  .detail-dialog-overlay {
+    padding: 0;
+  }
+  
+  .dialog-content {
+    padding: 16px;
+  }
+  
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* 附件卡片移动端优化 */
+  .attachment-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .attachment-preview {
+    width: 100%;
+    height: 200px;
+  }
+  
+  .attachment-details {
+    width: 100%;
+  }
+  
+  .attachment-footer {
+    justify-content: stretch;
+  }
+  
+  .btn-download {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .product-detail {
+    flex-direction: column;
+  }
+  
+  .product-image {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+}
+</style>

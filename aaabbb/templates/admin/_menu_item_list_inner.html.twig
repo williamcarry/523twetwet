@@ -1,0 +1,16 @@
+<div {{ vue_component('admin/MenuItemList', {
+    'menuItems': menuItems|map(item => {
+        'id': item.id,
+        'subcategoryId': item.subcategoryId,
+        'subcategoryTitle': item.subcategory ? item.subcategory.title : '',
+        'title': item.title,
+        'titleEn': item.titleEn,
+        'sortOrder': item.sortOrder,
+        'isActive': item.isActive,
+        'createdAt': item.createdAt|date('Y-m-d H:i:s'),
+        'updatedAt': item.updatedAt|date('Y-m-d H:i:s')
+    }),
+    'currentPage': currentPage,
+    'totalPages': totalPages,
+    'totalItems': totalItems
+}) }}></div>

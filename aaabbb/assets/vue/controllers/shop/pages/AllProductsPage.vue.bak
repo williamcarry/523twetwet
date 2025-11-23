@@ -1,0 +1,2213 @@
+<template>
+  <div class="min-h-screen bg-slate-50">
+    <SiteHeader />
+
+    <div class="mx-auto w-full max-w-[1500px] md:w-[80%] md:min-w-[1150px] px-4 md:px-0 py-6">
+      <!-- 筛选栏 -->
+      <div class="bg-white shadow-sm mb-6">
+        <!-- 已选条件 -->
+        <div class="flex items-center px-5 py-2 border-b border-slate-200">
+          <span class="font-bold text-sm w-20 shrink-0 text-left mr-4 inline-block text-primary px-2 py-1 rounded">{{ t('selected') }}</span>
+          <div class="flex-1 flex flex-wrap gap-2 items-center">
+            <span v-if="!selectedWarehouses && !selectedNewTime && !selectedShipment && !selectedSaleMode && !selectedCategory1 && !selectedCategory2 && !selectedCategory3" class="text-slate-500 text-sm">{{ t('none') }}</span>
+            <template v-else>
+              <span v-if="selectedWarehouses" class="inline-flex items-center gap-1 text-xs bg-slate-100 px-2 py-1 rounded">{{ getWarehouseName(selectedWarehouses) }} <button @click="selectedWarehouses = null" class="text-slate-600 hover:text-primary font-bold">×</button></span>
+              <span v-if="selectedNewTime" class="inline-flex items-center gap-1 text-xs bg-slate-100 px-2 py-1 rounded">{{ getNewTimeLabel(selectedNewTime) }} <button @click="selectedNewTime = ''" class="text-slate-600 hover:text-primary font-bold">×</button></span>
+              <span v-if="selectedShipment" class="inline-flex items-center gap-1 text-xs bg-slate-100 px-2 py-1 rounded">{{ getShipmentLabel(selectedShipment) }} <button @click="selectedShipment = ''" class="text-slate-600 hover:text-primary font-bold">×</button></span>
+              <span v-if="selectedSaleMode" class="inline-flex items-center gap-1 text-xs bg-slate-100 px-2 py-1 rounded">{{ getSaleModeLabel(selectedSaleMode) }} <button @click="selectedSaleMode = ''" class="text-slate-600 hover:text-primary font-bold">×</button></span>
+              <span v-if="selectedCategory1" class="inline-flex items-center gap-1 text-xs bg-slate-100 px-2 py-1 rounded">{{ getCategory1Name(selectedCategory1) }} <button @click="selectedCategory1 = ''; selectedCategory2 = ''; selectedCategory3 = ''" class="text-slate-600 hover:text-primary font-bold">×</button></span>
+              <span v-if="selectedCategory2" class="inline-flex items-center gap-1 text-xs bg-slate-100 px-2 py-1 rounded">{{ getCategory2Name(selectedCategory2) }} <button @click="selectedCategory2 = ''; selectedCategory3 = ''" class="text-slate-600 hover:text-primary font-bold">×</button></span>
+              <span v-if="selectedCategory3" class="inline-flex items-center gap-1 text-xs bg-slate-100 px-2 py-1 rounded">{{ getCategory3Name(selectedCategory3) }} <button @click="selectedCategory3 = ''" class="text-slate-600 hover:text-primary font-bold">×</button></span>
+            </template>
+          </div>
+        </div>
+
+        <!-- 商品品牌 -->
+        <div class="flex items-center px-5 py-2 border-b border-slate-200">
+          <span class="font-bold text-sm w-20 shrink-0 text-left mr-4 inline-block text-primary px-2 py-1 rounded">{{ t('brand') }}</span>
+          <div class="flex-1 flex flex-wrap gap-2 items-center">
+            <a href="javascript:;" class="text-sm text-primary font-medium cursor-pointer">{{ t('all') }}</a>
+          </div>
+        </div>
+
+
+        <!-- 上新时间 -->
+        <div class="flex items-center px-5 py-2 border-b border-slate-200">
+          <span class="font-bold text-sm w-20 shrink-0 text-left mr-4 inline-block text-primary px-2 py-1 rounded">{{ t('newTime') }}</span>
+          <div class="flex-1 flex flex-wrap gap-2 items-center">
+            <a href="javascript:;" @click="selectedNewTime = ''" :class="['text-xs px-2 py-1 rounded transition cursor-pointer', !selectedNewTime ? 'bg-primary text-white' : 'text-slate-700 hover:text-primary']">{{ t('all') }}</a>
+            <a v-for="option in newTimeOptions" :key="option.value" v-show="option.value" href="javascript:;" @click="selectedNewTime = selectedNewTime === option.value ? '' : option.value" :class="['text-xs px-2 py-1 rounded transition cursor-pointer', selectedNewTime === option.value ? 'bg-primary text-white' : 'text-slate-700 hover:text-primary']">{{ option.label }}</a>
+          </div>
+        </div>
+
+        <!-- 发货类型 -->
+        <div class="flex items-center px-5 py-2 border-b border-slate-200">
+          <span class="font-bold text-sm w-20 shrink-0 text-left mr-4 inline-block text-primary px-2 py-1 rounded">{{ t('shipment') }}</span>
+          <div class="flex-1 flex flex-wrap gap-2 items-center">
+            <a href="javascript:;" @click="selectedShipment = ''" :class="['text-xs px-2 py-1 rounded transition cursor-pointer', !selectedShipment ? 'bg-primary text-white' : 'text-slate-700 hover:text-primary']">{{ t('all') }}</a>
+            <a v-for="option in shipmentOptions" :key="option.value" v-show="option.value" href="javascript:;" @click="selectedShipment = selectedShipment === option.value ? '' : option.value" :class="['text-xs px-2 py-1 rounded transition cursor-pointer', selectedShipment === option.value ? 'bg-primary text-white' : 'text-slate-700 hover:text-primary']">{{ option.label }}</a>
+          </div>
+        </div>
+
+        <!-- 交易模式 -->
+        <div class="flex items-center px-5 py-2 border-b border-slate-200">
+          <span class="font-bold text-sm w-20 shrink-0 text-left mr-4 inline-block text-primary px-2 py-1 rounded">{{ t('mode') }}</span>
+          <div class="flex-1 flex flex-wrap gap-2 items-center">
+            <a href="javascript:;" @click="selectedSaleMode = ''" :class="['text-xs px-2 py-1 rounded transition cursor-pointer', !selectedSaleMode ? 'bg-primary text-white' : 'text-slate-700 hover:text-primary']">{{ t('all') }}</a>
+            <a v-for="option in saleModeOptions" :key="option.value" v-show="option.value" href="javascript:;" @click="selectedSaleMode = selectedSaleMode === option.value ? '' : option.value" :class="['text-xs px-2 py-1 rounded transition cursor-pointer', selectedSaleMode === option.value ? 'bg-primary text-white' : 'text-slate-700 hover:text-primary']">{{ option.label }}</a>
+          </div>
+        </div>
+
+        <!-- 商品分类 -->
+        <div class="flex items-center px-5 py-3 border-b border-slate-200 gap-5">
+          <span class="font-bold text-sm w-[150px] shrink-0 text-left">{{ t('category') }}：</span>
+
+          <!-- 一级分类 -->
+          <div class="relative inline-block w-[200px]">
+            <div @click="showCategory1Dropdown = !showCategory1Dropdown" class="flex items-center cursor-pointer border border-slate-300 rounded px-3 py-2 bg-white hover:border-primary transition">
+              <input
+                type="text"
+                :value="getCategory1Name(selectedCategory1) || t('category1')"
+                readonly
+                class="flex-1 text-xs bg-transparent outline-none cursor-pointer"
+              />
+            </div>
+            <div v-show="showCategory1Dropdown" class="absolute top-full left-0 mt-1 w-full bg-white border border-slate-300 rounded shadow-lg z-50 max-h-60 overflow-y-auto">
+              <div @click="selectedCategory1 = ''; selectedCategory2 = ''; selectedCategory3 = ''; showCategory1Dropdown = false; fetchProducts(1)" class="px-3 py-2 text-xs cursor-pointer hover:bg-primary hover:text-white" :class="{'bg-primary text-white': !selectedCategory1}">{{ t('all') }}</div>
+              <div v-for="cat in category1List" :key="cat.id" @click="selectCategory1(cat.id)" class="px-3 py-2 text-xs cursor-pointer hover:bg-primary hover:text-white border-t border-slate-100" :class="{'bg-primary text-white': selectedCategory1 === cat.id}">{{ getCategory1Title(cat) }}</div>
+            </div>
+          </div>
+
+          <!-- 二级分类 -->
+          <div class="relative inline-block w-[200px]">
+            <div @click="showCategory2Dropdown = !showCategory2Dropdown" class="flex items-center cursor-pointer border border-slate-300 rounded px-3 py-2 bg-white hover:border-primary transition">
+              <input
+                type="text"
+                :value="getCategory2Name(selectedCategory2) || t('category2')"
+                readonly
+                class="flex-1 text-xs bg-transparent outline-none cursor-pointer"
+                :disabled="!selectedCategory1"
+              />
+            </div>
+            <div v-show="showCategory2Dropdown" class="absolute top-full left-0 mt-1 w-full bg-white border border-slate-300 rounded shadow-lg z-50 max-h-60 overflow-y-auto">
+              <div @click="selectedCategory2 = ''; selectedCategory3 = ''; showCategory2Dropdown = false; fetchProducts(1)" class="px-3 py-2 text-xs cursor-pointer hover:bg-primary hover:text-white" :class="{'bg-primary text-white': !selectedCategory2}">{{ t('all') }}</div>
+              <div v-for="cat in category2List" :key="cat.id" @click="selectCategory2(cat.id)" class="px-3 py-2 text-xs cursor-pointer hover:bg-primary hover:text-white border-t border-slate-100" :class="{'bg-primary text-white': selectedCategory2 === cat.id}">{{ getCategory2Title(cat) }}</div>
+            </div>
+          </div>
+
+          <!-- 三级分类 -->
+          <div class="relative inline-block w-[200px]">
+            <div @click="showCategory3Dropdown = !showCategory3Dropdown" class="flex items-center cursor-pointer border border-slate-300 rounded px-3 py-2 bg-white hover:border-primary transition">
+              <input
+                type="text"
+                :value="getCategory3Name(selectedCategory3) || t('category3')"
+                readonly
+                class="flex-1 text-xs bg-transparent outline-none cursor-pointer"
+                :disabled="!selectedCategory2"
+              />
+            </div>
+            <div v-show="showCategory3Dropdown" class="absolute top-full left-0 mt-1 w-full bg-white border border-slate-300 rounded shadow-lg z-50 max-h-60 overflow-y-auto">
+              <div @click="selectedCategory3 = ''; showCategory3Dropdown = false; fetchProducts(1)" class="px-3 py-2 text-xs cursor-pointer hover:bg-primary hover:text-white" :class="{'bg-primary text-white': !selectedCategory3}">{{ t('all') }}</div>
+              <div v-for="cat in category3List" :key="cat.id" @click="selectCategory3(cat.id); showCategory3Dropdown = false; fetchProducts(1)" class="px-3 py-2 text-xs cursor-pointer hover:bg-primary hover:text-white border-t border-slate-100" :class="{'bg-primary text-white': selectedCategory3 === cat.id}">{{ getCategory3Title(cat) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 全选与批量操作 -->
+      <div class="bg-white shadow-sm mb-6">
+        <div class="flex items-center px-5 py-3 border-b border-slate-200">
+          <!-- 左边：全选与已选项 -->
+          <div class="flex-shrink-0">
+            <ul class="flex items-center gap-5">
+              <li class="flex items-center gap-2">
+                <input type="checkbox" v-model="selectAll" @change="handleSelectAll" class="rounded cursor-pointer" />
+                <span class="text-sm font-medium text-slate-700 cursor-pointer">{{ t('selectAll') }}</span>
+              </li>
+              <li>
+                <p class="text-xs text-slate-600">{{ t('selectedItems') }} <em class="font-semibold text-primary">{{ selectedCount }}</em> {{ t('items') }}</p>
+              </li>
+            </ul>
+          </div>
+
+          <!-- 右边：批量操作按钮 -->
+          <div class="flex-1"></div>
+          <div class="flex-shrink-0">
+            <ul class="flex items-center gap-6">
+              <li><a href="javascript:;" class="text-xs text-slate-700 hover:text-primary transition inline-flex items-center gap-1" :title="t('publish')">
+                <img src="/frondend/images/AllProductsPage/publish_icon.png" :alt="t('publish')" class="w-4 h-4" />
+                {{ t('publish') }}
+              </a></li>
+              <li><a href="javascript:;" @click="batchDownloadProducts" :class="{'opacity-50 cursor-not-allowed': batchDownloading}" class="text-xs text-slate-700 hover:text-primary transition inline-flex items-center gap-1">
+                <svg v-if="batchDownloading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#cb261c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                {{ batchDownloading ? t('downloading') : t('download') }}
+              </a></li>
+              <li><a href="javascript:;" @click="batchAddFavorites" class="text-xs text-slate-700 hover:text-red-600 transition inline-flex items-center gap-1">
+                <HeartIcon :size="16" fill="none" stroke="currentColor" :stroke-width="2" />
+                {{ t('favorite') }}
+              </a></li>
+              <li><a href="javascript:;" class="text-xs text-slate-700 hover:text-primary transition inline-flex items-center gap-1">
+                <DownloadIcon class="w-4 h-4 text-[#2F54EB]" />
+                {{ t('downloadSpu') }}
+              </a></li>
+              <li><a href="javascript:;" class="text-xs text-slate-700 hover:text-primary transition inline-flex items-center gap-1">
+                <CopyIcon class="w-4 h-4 text-[#13C2C2]" />
+                {{ t('copySpu') }}
+              </a></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 排序栏（改为附件格式） -->
+        <div class="sort-wrapper">
+          <div class="sort-inner">
+            <ul class="sort-list">
+              <li v-for="option in sortOptions" :key="option.value" :class="['sort-item', selectedSort === option.value ? 'active' : '']">
+                <a href="javascript:;" @click.prevent="handleSortChange(option.value)" class="sort-link">
+                  {{ option.label }}
+                  <!-- 显示箭头 -->
+                  <i v-if="option.hasArrow && selectedSort === option.value" class="sort-arrow" :class="sortOrder === 'ASC' ? 'arrow-up' : 'arrow-down'"></i>
+                </a>
+              </li>
+
+              <li class="li-2">
+                <label class="onlylook">
+                  <input type="checkbox" lay-skin="primary" lay-filter="onlylook" :title="t('onlyStock')" class="hidden-checkbox" v-model="onlyStock" />
+                  <span class="onlylook-text">{{ t('onlyStock') }}</span>
+                  <i class="i-2"></i>
+                </label>
+              </li>
+
+              <li class="li-3">
+                {{ t('inventory') }}：
+                <input type="text" v-model="inventoryStart" class="small-input" :placeholder="t('min')" />
+                -
+                <input type="text" v-model="inventoryEnd" class="small-input" :placeholder="t('max')" />
+              </li>
+
+              <li class="li-4">
+                {{ t('priceRange') }}：
+                <input type="text" v-model="minPrice" class="small-input" :placeholder="t('min')" />
+                -
+                <input type="text" v-model="maxPrice" class="small-input" :placeholder="t('max')" />
+                <button class="button-apply" @click.prevent="applyStockAndPriceFilter">{{ t('confirm') }}</button>
+              </li>
+            </ul>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 商品网格 -->
+      <template v-if="isLoading">
+        <!-- 显示骨架屏 -->
+        <SkeletonLoader type="product-list" :count="16" :columns="4" />
+      </template>
+      <template v-else-if="products.length === 0">
+        <!-- 暂无商品提示 -->
+        <div class="bg-white rounded-lg shadow-sm py-20 mb-8">
+          <div class="text-center">
+            <p class="text-slate-400 text-lg font-medium">{{ t('noProducts') }}</p>
+          </div>
+        </div>
+      </template>
+      <template v-else>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+          <div
+            v-for="product in products"
+            :key="product.id"
+            class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition relative"
+          >
+            <!-- 图片 -->
+            <a :href="`/shop/item/${product.id}`" target="_blank" rel="noopener noreferrer" class="block aspect-square overflow-hidden bg-slate-100 relative">
+              <img :src="product.image" :alt="getProductTitle(product)" class="w-full h-full object-cover hover:scale-105 transition" />
+              <!-- 折扣标签(右上角) -->
+              <div v-if="getCurrentDiscount(product) > 0" class="absolute top-2 right-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded">
+                -{{ formatDiscount(getCurrentDiscount(product)) }}
+              </div>
+            </a>
+
+            <!-- 内容 -->
+            <div class="p-4">
+              <!-- 标题 -->
+              <a :href="`/shop/item/${product.id}`" target="_blank" rel="noopener noreferrer" class="block mb-2">
+                <h3 class="text-sm text-slate-900 font-medium line-clamp-2 hover:text-primary transition">
+                  {{ getProductTitle(product) }}
+                </h3>
+              </a>
+
+              <!-- SPU 和库存 -->
+              <div class="flex justify-between items-center mb-3">
+                <p class="text-xs text-slate-500">{{ t('spu') }}: {{ product.spu }}</p>
+                <p class="text-xs text-slate-500">{{ t('stockLabel') }}: {{ getCurrentStock(product) }}</p>
+              </div>
+
+              <!-- 价格 -->
+              <div class="mb-3 p-2 bg-slate-50 rounded text-center price-box">
+                <!-- 折扣价(如果有折扣) -->
+                <div class="text-red-500 font-bold text-lg" v-if="getCurrentDiscount(product) > 0">
+                  {{ getCurrentCurrency(product) }} {{ calculateDiscountedPrice(product).toFixed(2) }}
+                </div>
+                <!-- 原价(如果没有折扣就显示售价,如果有折扣就显示划线价) -->
+                <div :class="getCurrentDiscount(product) > 0 ? 'text-gray-500 text-sm line-through' : 'text-red-500 font-bold text-lg'" v-if="getCurrentSellingPrice(product)">
+                  {{ getCurrentCurrency(product) }} {{ parseFloat(getCurrentSellingPrice(product)).toFixed(2) }}
+                </div>
+              </div>
+
+              <!-- 区域选择器 -->
+              <div class="mb-3 flex items-center gap-2 justify-center flex-wrap" v-if="product.shippingRegions && product.shippingRegions.length > 0">
+                <button
+                  v-for="region in product.shippingRegions"
+                  :key="region"
+                  @click="selectRegion(product, region)"
+                  :class="[
+                    'text-xs px-2 py-1 rounded border transition',
+                    getSelectedRegion(product) === region
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-white text-slate-700 border-slate-300 hover:border-primary'
+                  ]"
+                >
+                  {{ region }}
+                </button>
+              </div>
+
+              <!-- 勾选框和操作 -->
+              <div class="flex items-center justify-between pt-3">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    class="rounded" 
+                    :checked="selectedProducts.has(product.id)"
+                    @change="toggleProductSelection(product.id)"
+                  />
+                </label>
+                <div class="flex items-center gap-2">
+                  <button :title="t('publish')" class="p-2 text-slate-600 hover:text-primary transition">
+                    <img src="/frondend/images/AllProductsPage/publish_icon.png" :alt="t('publish')" class="w-4 h-4" />
+                  </button>
+                  <button :title="t('download')" @click="downloadProduct(product.id)" class="p-2 text-slate-600 hover:text-primary transition">
+                    <!-- 已下载：实心红色 -->
+                    <svg v-if="isProductDownloaded(product.id)" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cb261c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="cursor-pointer">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                      <circle cx="12" cy="12" r="10" fill="#cb261c" opacity="0.15"/>
+                    </svg>
+                    <!-- 未下载：空心灰色 -->
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="cursor-pointer">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                  </button>
+                  <button :title="t('favorite')" class="p-2 text-slate-600 hover:text-red-600 transition" @click="toggleFavorite(product.id)">
+                    <!-- 已收藏：实心红心 -->
+                    <svg v-if="isProductFavorited(product.id)" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#cb261c">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <!-- 未收藏：空心红心 -->
+                    <HeartIcon v-else :size="16" fill="none" stroke="#cb261c" :stroke-width="2" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 使用 Pagination 组件 -->
+      <div class="pagination-debug">
+        <!-- 调试信息 -->
+        <!-- <p>当前页: {{ currentPage }}, 总页数: {{ totalPages }}, 总条目: {{ totalItems }}</p> -->
+      </div>
+      <Pagination 
+        :current-page="currentPage"
+        :total-pages="totalPages"
+        :change-page="goToPage"
+      />
+
+    </div>
+
+    <SiteFooter />
+    
+    <!-- 收藏分组选择器弹窗 -->
+    <Teleport to="body">
+      <div v-if="showGroupSelectorModal" class="modal-overlay" @click="closeGroupSelectorModal">
+        <div class="modal-content" @click.stop>
+          <!-- 弹窗标题 -->
+          <div class="modal-header">
+            <h3>{{ t('selectGroup') }}</h3>
+            <button @click="closeGroupSelectorModal" class="btn-close">
+              <XIcon :size="20" />
+            </button>
+          </div>
+          
+          <!-- 弹窗主体 -->
+          <div class="modal-body">
+            <!-- 现有分组列表 -->
+            <div v-if="!showCreateGroupForm" class="group-list">
+              <div 
+                v-for="group in favoriteGroups" 
+                :key="group.id"
+                :class="['group-item', { active: selectedGroupId === group.id }]"
+                @click="selectedGroupId = group.id"
+              >
+                <div class="group-info">
+                  <div class="group-header">
+                    <div class="group-name">{{ group.groupName }}</div>
+                    <div class="group-count">{{ group.productCount }} {{ t('items') }}</div>
+                  </div>
+                </div>
+                <div v-if="selectedGroupId === group.id" class="group-check">
+                  <CheckIcon :size="16" />
+                </div>
+              </div>
+              
+              <!-- 创建新分组按钮 -->
+              <button @click="showCreateGroupForm = true" class="btn-create-group">
+                <PlusIcon :size="16" />
+                {{ t('createNewGroup') }}
+              </button>
+            </div>
+            
+            <!-- 创建新分组表单 -->
+            <div v-else class="create-group-form">
+              <div class="form-group">
+                <label>{{ t('groupName') }}</label>
+                <input 
+                  v-model="newGroup.groupName" 
+                  type="text" 
+                  class="form-input"
+                  :placeholder="t('groupName')"
+                />
+              </div>
+              <div class="form-group">
+                <label>{{ t('groupDescription') }}</label>
+                <textarea 
+                  v-model="newGroup.groupDescription" 
+                  class="form-input"
+                  :placeholder="t('groupDescription')"
+                  rows="3"
+                ></textarea>
+              </div>
+              <div class="form-actions">
+                <button @click="showCreateGroupForm = false" class="btn-secondary">
+                  {{ t('cancel') }}
+                </button>
+                <button @click="createNewGroup" class="btn-primary">
+                  {{ t('confirm') }}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 弹窗底部 -->
+          <div v-if="!showCreateGroupForm" class="modal-footer">
+            <button @click="closeGroupSelectorModal" class="btn-cancel">
+              {{ t('cancel') }}
+            </button>
+            <button @click="confirmFavorite" class="btn-confirm">
+              {{ t('confirm') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import SiteHeader from '@/components/SiteHeader.vue'
+import SiteFooter from '@/components/SiteFooter.vue'
+import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import Pagination from '@/components/Pagination.vue'
+import { 
+  Upload as UploadIcon,
+  Bookmark as BookmarkIcon,
+  Copy as CopyIcon,
+  Download as DownloadIcon,
+  PackagePlus as PackagePlusIcon,
+  Heart as HeartIcon,
+  Package as PackageIcon,
+  X as XIcon,
+  Plus as PlusIcon,
+  Check as CheckIcon
+} from 'lucide-vue-next'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import encryptionService from '../data/encryption-service.js'
+import apiSignature from '../services/apiSignature.js'
+
+// 多语言配置
+const messages = {
+  'zh-CN': {
+    selected: '已选',
+    none: '无',
+    brand: '品牌',
+    all: '全部',
+    newTime: '上新',
+    shipment: '发货',
+    mode: '模式',
+    category: '商品分类',
+    category1: '一级分类',
+    category2: '二级分类',
+    category3: '三级分类',
+    selectAll: '全选',
+    selectedItems: '已选',
+    items: '项',
+    publish: '一键刊登',
+    download: '下载数据包',
+    favorite: '加入收藏夹',
+    downloadSpu: '下载SPU',
+    copySpu: '复制SPU',
+    sortComprehensive: '综合',
+    sortNewest: '最新',
+    sortSales: '销量',
+    sortPrice: '价格',
+    sortDownloads: '下载数',
+    sortStock: '库存',
+    onlyStock: '仅看有货',
+    inventory: '库存',
+    priceRange: '价格',
+    confirm: '确定',
+    min: '最小',
+    max: '最大',
+    spu: 'SPU',
+    stockLabel: '库存',
+    newTime7: '近7天',
+    newTime15: '近15天',
+    newTime30: '近30天',
+    newTime60: '近60天',
+    shipmentPlatform: '平台发货',
+    shipmentSupplier: '供应商自发货',
+    modeDropshipping: '一件代发',
+    modeWholesale: '批发',
+    modeReserve: '圈货',
+    modePickup: '自提',
+    noProducts: '暂无商品',
+    downloadSuccess: '下载任务已加入队列，请稍后到下载中心查看',
+    downloadError: '下载失败',
+    pleaseLogin: '请先登录',
+    pleaseSelectProducts: '请至少选择一个商品',
+    batchDownloadConfirm: '确定要下载选中的 {count} 个商品吗?',
+    confirmTitle: '确认下载',
+    cancel: '取消',
+    quotaInsufficient: '下载额度不足',
+    quotaInsufficientMsg: '您本月剩余下载额度为 {remaining} 次,最多可以下载 {max} 个商品。是否继续?',
+    quotaExhausted: '下载额度已用完',
+    quotaExhaustedMsg: '您本月的下载额度已用完,无法下载商品',
+    downloading: '正在处理下载任务...',
+    pleaseWait: '请稍候，正在提交下载任务',
+    alreadyDownloaded: '已下载过的商品',
+    downloadedProducts: '以下商品本月已下载过，将被跳过：',
+    actualDownloadCount: '实际将下载 {count} 个商品',
+    allDownloaded: '所有选中的商品都已下载过',
+    checkingDownloadStatus: '正在检查下载状态...',
+  },
+  'en': {
+    selected: 'Selected',
+    none: 'None',
+    brand: 'Brand',
+    all: 'All',
+    newTime: 'New Arrivals',
+    shipment: 'Shipping',
+    mode: 'Mode',
+    category: 'Category',
+    category1: 'Category 1',
+    category2: 'Category 2',
+    category3: 'Category 3',
+    selectAll: 'Select All',
+    selectedItems: 'Selected',
+    items: 'items',
+    publish: 'Publish',
+    download: 'Download',
+    favorite: 'Add to Favorites',
+    downloadSpu: 'Download SPU',
+    copySpu: 'Copy SPU',
+    sortComprehensive: 'Comprehensive',
+    sortNewest: 'Newest',
+    sortSales: 'Sales',
+    sortPrice: 'Price',
+    sortDownloads: 'Downloads',
+    sortStock: 'Stock',
+    onlyStock: 'In Stock Only',
+    inventory: 'Inventory',
+    priceRange: 'Price Range',
+    confirm: 'Confirm',
+    min: 'Min',
+    max: 'Max',
+    spu: 'SPU',
+    stockLabel: 'Stock',
+    newTime7: 'Last 7 days',
+    newTime15: 'Last 15 days',
+    newTime30: 'Last 30 days',
+    newTime60: 'Last 60 days',
+    shipmentPlatform: 'Platform Shipping',
+    shipmentSupplier: 'Supplier Shipping',
+    modeDropshipping: 'Dropshipping',
+    modeWholesale: 'Wholesale',
+    modeReserve: 'Reserve',
+    modePickup: 'Pickup',
+    noProducts: 'No products available',
+    downloadSuccess: 'Download task added to queue, please check the download center later',
+    downloadError: 'Download failed',
+    pleaseLogin: 'Please login first',
+    pleaseSelectProducts: 'Please select at least one product',
+    batchDownloadConfirm: 'Are you sure you want to download {count} selected products?',
+    confirmTitle: 'Confirm Download',
+    cancel: 'Cancel',
+    quotaInsufficient: 'Insufficient download quota',
+    quotaInsufficientMsg: 'You have {remaining} downloads remaining this month. You can download up to {max} products. Continue?',
+    quotaExhausted: 'Download quota exhausted',
+    quotaExhaustedMsg: 'Your download quota for this month has been exhausted',
+    downloading: 'Processing download tasks...',
+    pleaseWait: 'Please wait, submitting download tasks',
+    alreadyDownloaded: 'Already Downloaded Products',
+    downloadedProducts: 'The following products have already been downloaded this month and will be skipped:',
+    actualDownloadCount: 'Will actually download {count} products',
+    allDownloaded: 'All selected products have already been downloaded',
+    checkingDownloadStatus: 'Checking download status...',
+  }
+}
+
+// 当前语言
+const currentLang = ref('zh-CN')
+
+// 收藏相关多语言
+const favoriteTranslations = ref({})
+
+// 加载收藏多语言文件
+const loadFavoriteTranslations = async () => {
+  try {
+    const response = await fetch('/frondend/lang/AllProductsPage.json')
+    const data = await response.json()
+    favoriteTranslations.value = data
+  } catch (error) {
+    console.error('Failed to load favorite translations:', error)
+  }
+}
+
+// 翻译函数
+const t = (key, params = {}) => {
+  // 先尝试从收藏多语言文件中获取
+  let text = favoriteTranslations.value[currentLang.value]?.[key]
+  
+  // 如果收藏文件中没有，再从内嵌 messages 中获取
+  if (!text) {
+    text = messages[currentLang.value]?.[key] || messages['zh-CN']?.[key] || key
+  }
+  
+  // 替换参数 {param}
+  Object.keys(params).forEach(param => {
+    const placeholder = `{${param}}`
+    text = text.replace(new RegExp(placeholder, 'g'), params[param])
+  })
+  
+  return text
+}
+
+const isLoading = ref(true)
+
+// 搜索关键词
+const searchKeyword = ref('')
+
+const selectedWarehouses = ref(null)
+const selectedNewTime = ref('')
+const selectedShipment = ref('')
+const selectedSaleMode = ref('')
+const selectedCategory1 = ref('')
+const selectedCategory2 = ref('')
+const selectedCategory3 = ref('')
+const selectedSort = ref('viewCount')  // 默认按综合（浏览量）排序
+const sortOrder = ref('DESC')  // 默认降序
+const onlyStock = ref(false)
+const inventoryStart = ref('')
+const inventoryEnd = ref('')
+const minPrice = ref('')
+const maxPrice = ref('')
+
+// 网站货币符号（从SiteConfig读取）
+const siteCurrency = ref('USD')
+
+// 分类数据
+const category1List = ref([])
+const category2List = ref([])
+const category3List = ref([])
+
+// 更新页面标题
+const updatePageTitle = () => {
+  const title = t('pageTitle')
+  if (title && title !== 'pageTitle') {
+    document.title = title
+  }
+}
+
+// 监听语言变化事件
+const handleLangChange = (event) => {
+  if (event.detail && event.detail.lang) {
+    currentLang.value = event.detail.lang
+  }
+  // 重新加载翻译以确保语言切换时更新
+  loadFavoriteTranslations().then(() => {
+    // 翻译加载完成后设置标题
+    updatePageTitle()
+  })
+}
+
+const applyStockAndPriceFilter = () => {
+  // 独立的库存和价格筛选逻辑
+  // 重新加载商品数据
+  fetchProducts(1)
+}
+
+// 搜索商品（使用搜索API）
+const fetchSearchResults = async (page = 1) => {
+  try {
+    // 构建搜索参数
+    const params = new URLSearchParams()
+    params.append('q', searchKeyword.value)
+    params.append('page', page)
+    
+    const response = await fetch(`/shop/api/product/search?${params.toString()}`)
+    const data = await response.json()
+    
+    // 更新商品数据
+    products.value = data.products.map(product => ({
+      id: product.id,
+      spu: product.spu,
+      title: product.title,
+      titleEn: product.titleEn,
+      image: product.thumbnailImage || '',
+      stock: product.stock || 0,
+      originalPrice: product.originalPrice,
+      sellingPrice: product.sellingPrice,
+      discountRate: product.discountRate,
+      currency: product.currency || 'USD',
+      // 多区域数据
+      shippingRegions: product.shippingRegions || [],
+      regionConfigs: product.regionConfigs || {}
+    }))
+    
+    // 更新分页信息
+    totalPages.value = data.pagination.totalPages
+    totalItems.value = data.pagination.totalItems
+    currentPage.value = data.pagination.currentPage
+    itemsPerPage.value = data.pagination.itemsPerPage
+    pageInput.value = data.pagination.currentPage
+    
+    isLoading.value = false
+  } catch (error) {
+    console.error('搜索商品失败:', error)
+    isLoading.value = false
+  }
+}
+
+// 获取商品数据
+const fetchProducts = async (page = 1) => {
+  try {
+    isLoading.value = true
+    
+    // 如果有搜索关键词，使用搜索API
+    if (searchKeyword.value) {
+      await fetchSearchResults(page)
+      return
+    }
+    
+    // 构建查询参数
+    const params = new URLSearchParams()
+    params.append('page', page)
+    
+    // 添加分类筛选参数（使用ID）
+    if (selectedCategory3.value) {
+      params.append('itemId', selectedCategory3.value)
+    } else if (selectedCategory2.value) {
+      params.append('subcategoryId', selectedCategory2.value)
+    } else if (selectedCategory1.value) {
+      params.append('categoryId', selectedCategory1.value)
+    }
+    
+    // 条件1：上新时间筛选
+    if (selectedNewTime.value) {
+      params.append('newTime', selectedNewTime.value)
+    }
+    
+    // 条件2：发货类型筛选
+    if (selectedShipment.value !== '') {
+      params.append('shipment', selectedShipment.value)
+    }
+    
+    // 条件3：交易模式筛选
+    if (selectedSaleMode.value !== '') {
+      params.append('saleMode', selectedSaleMode.value)
+    }
+    
+    // 添加排序参数
+    params.append('sortField', selectedSort.value)
+    params.append('sortOrder', sortOrder.value)
+    
+    // 独立条件：库存筛选
+    if (inventoryStart.value && inventoryStart.value !== '') {
+      params.append('stockMin', inventoryStart.value)
+    }
+    if (inventoryEnd.value && inventoryEnd.value !== '') {
+      params.append('stockMax', inventoryEnd.value)
+    }
+    
+    // 独立条件：价格筛选
+    if (minPrice.value && minPrice.value !== '') {
+      params.append('priceMin', minPrice.value)
+    }
+    if (maxPrice.value && maxPrice.value !== '') {
+      params.append('priceMax', maxPrice.value)
+    }
+    
+    const response = await fetch(`/shop/api/product/allproduct?${params.toString()}`)
+    const data = await response.json()
+    
+    // 保存网站货币符号
+    if (data.siteCurrency) {
+      siteCurrency.value = data.siteCurrency
+    }
+    
+    // 更新商品数据
+    products.value = data.products.map(product => ({
+      id: product.id,
+      spu: product.spu,
+      title: product.title,
+      titleEn: product.titleEn,
+      image: product.thumbnailImage || '',
+      stock: product.stock || 0,
+      originalPrice: product.originalPrice,
+      sellingPrice: product.sellingPrice,
+      discountRate: product.discountRate,
+      currency: product.currency || 'USD',
+      // 多区域数据
+      shippingRegions: product.shippingRegions || [],
+      regionConfigs: product.regionConfigs || {}
+    }))
+    
+    // 更新分页信息
+    totalPages.value = data.pagination.totalPages
+    totalItems.value = data.pagination.totalItems
+    currentPage.value = data.pagination.currentPage
+    itemsPerPage.value = data.pagination.itemsPerPage
+    pageInput.value = data.pagination.currentPage
+    
+    // 更新分类数据
+    if (data.categories) {
+      console.log('接收到的分类数据:', data.categories)
+      processCategoryData(data.categories)
+      console.log('处理后的分类数据:', {
+        category1List: category1List.value,
+        category2List: category2List.value,
+        category3List: category3List.value
+      })
+    }
+    
+    // 检查商品收藏状态和下载状态
+    if (products.value.length > 0) {
+      const productIds = products.value.map(p => p.id)
+      await checkFavoriteStatus(productIds)
+      await checkDownloadStatus(productIds)
+    }
+    
+    isLoading.value = false
+  } catch (error) {
+    console.error('获取商品数据失败:', error)
+    isLoading.value = false
+  }
+}
+
+// 处理分类数据（适配新的ID格式）
+const processCategoryData = (categories) => {
+  // 清空现有分类数据
+  category1List.value = []
+  category2List.value = []
+  category3List.value = []
+  
+  // 处理一级分类
+  if (Array.isArray(categories)) {
+    category1List.value = categories.map(cat => ({
+      id: cat.id,
+      title: cat.title,
+      titleEn: cat.titleEn,
+      children: cat.children || []
+    }))
+    
+    // 如果已选择一级分类，更新二级分类
+    if (selectedCategory1.value) {
+      const selectedCat = category1List.value.find(cat => cat.id === selectedCategory1.value)
+      if (selectedCat && selectedCat.children) {
+        category2List.value = selectedCat.children.map(child => ({
+          id: child.id,
+          title: child.title,
+          titleEn: child.titleEn,
+          items: child.items || []
+        }))
+        
+        // 如果已选择二级分类，更新三级分类
+        if (selectedCategory2.value) {
+          const selectedChild = selectedCat.children.find(child => child.id === selectedCategory2.value)
+          if (selectedChild && selectedChild.items) {
+            category3List.value = selectedChild.items.map(item => ({
+              id: item.id,
+              title: item.title,
+              titleEn: item.titleEn
+            }))
+          }
+        }
+      }
+    }
+  }
+}
+
+// 选择一级分类（使用ID）
+const selectCategory1 = (id) => {
+  selectedCategory1.value = id
+  selectedCategory2.value = ''
+  selectedCategory3.value = ''
+  showCategory1Dropdown.value = false
+  
+  // 更新二级分类列表
+  const selectedCat = category1List.value.find(cat => cat.id === id)
+  if (selectedCat && selectedCat.children) {
+    category2List.value = selectedCat.children.map(child => ({
+      id: child.id,
+      title: child.title,
+      titleEn: child.titleEn,
+      items: child.items || []
+    }))
+  } else {
+    category2List.value = []
+  }
+  
+  // 清空三级分类列表
+  category3List.value = []
+  
+  // 重新加载商品数据
+  fetchProducts(1)
+}
+
+// 选择二级分类（使用ID）
+const selectCategory2 = (id) => {
+  selectedCategory2.value = id
+  selectedCategory3.value = ''
+  showCategory2Dropdown.value = false
+  
+  // 更新三级分类列表
+  const selectedCat = category1List.value.find(cat => cat.id === selectedCategory1.value)
+  if (selectedCat && selectedCat.children) {
+    const selectedChild = selectedCat.children.find(child => child.id === id)
+    if (selectedChild && selectedChild.items) {
+      category3List.value = selectedChild.items.map(item => ({
+        id: item.id,
+        title: item.title,
+        titleEn: item.titleEn
+      }))
+    } else {
+      category3List.value = []
+    }
+  }
+  
+  // 重新加载商品数据
+  fetchProducts(1)
+}
+
+// 选择三级分类（使用ID）
+const selectCategory3 = (id) => {
+  selectedCategory3.value = id
+  showCategory3Dropdown.value = false
+  
+  // 重新加载商品数据
+  fetchProducts(1)
+}
+
+const selectAll = ref(false)
+const selectedProducts = ref(new Set())
+
+// 收藏功能相关状态
+const favoritedProductsMap = ref(new Map()) // Map<productId, { isFavorited, favoriteId, groupId, groupName }>
+const downloadedProductsSet = ref(new Set()) // Set<productId> - 已下载过的商品ID集合
+const favoriteGroups = ref([]) // 收藏分组列表
+const showGroupSelectorModal = ref(false) // 分组选择器弹窗
+const currentFavoriteProductId = ref(null) // 当前要收藏的商品ID（单个收藏时使用）
+const selectedGroupId = ref(null) // 当前选中的分组ID
+const showCreateGroupForm = ref(false) // 是否显示创建分组表单
+const newGroup = ref({ // 新分组数据
+  groupName: '',
+  groupDescription: ''
+})
+const isBatchFavorite = ref(false) // 是否为批量收藏
+
+// 下载额度信息
+const downloadStats = ref({
+  downloadQuota: 0,
+  downloadUsed: 0,
+  downloadRemaining: 0
+})
+
+// 批量下载加载状态
+const batchDownloading = ref(false)
+
+// 每个商品当前选中的区域
+const productSelectedRegions = ref(new Map())
+
+// 分页相关状态
+const currentPage = ref(1)
+const totalPages = ref(1)
+const totalItems = ref(0)
+const itemsPerPage = ref(20)
+const pageInput = ref(1)
+
+// Dropdown visibility states
+const showCategory1Dropdown = ref(false)
+const showCategory2Dropdown = ref(false)
+const showCategory3Dropdown = ref(false)
+
+// 商品数据
+const products = ref([])
+
+const selectedCount = computed(() => selectedProducts.value.size)
+
+const newTimeOptions = computed(() => [
+  { label: t('all'), value: '' },
+  { label: t('newTime7'), value: '7' },
+  { label: t('newTime15'), value: '15' },
+  { label: t('newTime30'), value: '30' },
+  { label: t('newTime60'), value: '60' },
+])
+
+const shipmentOptions = computed(() => [
+  { label: t('all'), value: '' },
+  { label: t('shipmentPlatform'), value: '0' },
+  { label: t('shipmentSupplier'), value: '1' },
+])
+
+const saleModeOptions = computed(() => [
+  { label: t('all'), value: '' },
+  { label: t('modeDropshipping'), value: '0' },
+  { label: t('modeWholesale'), value: '1' },
+  { label: t('modeReserve'), value: '2' },
+  { label: t('modePickup'), value: '3' },
+])
+
+const sortOptions = computed(() => [
+  { label: t('sortComprehensive'), value: 'viewCount', field: 'viewCount' },
+  { label: t('sortNewest'), value: 'updatedAt', field: 'updatedAt', hasArrow: true },
+  { label: t('sortSales'), value: 'salesCount', field: 'salesCount', hasArrow: true },
+  { label: t('sortPrice'), value: 'price', field: 'price', hasArrow: true },
+  { label: t('sortDownloads'), value: 'downloadCount', field: 'downloadCount', hasArrow: true },
+  { label: t('sortStock'), value: 'stock', field: 'stock', hasArrow: true },
+])
+
+const handleSelectAll = () => {
+  if (selectAll.value) {
+    products.value.forEach(product => {
+      selectedProducts.value.add(product.id)
+    })
+  } else {
+    products.value.forEach(product => {
+      selectedProducts.value.delete(product.id)
+    })
+  }
+}
+
+const toggleProductSelection = (productId) => {
+  if (selectedProducts.value.has(productId)) {
+    selectedProducts.value.delete(productId)
+  } else {
+    selectedProducts.value.add(productId)
+  }
+  
+  updateSelectAllState()
+}
+
+const updateSelectAllState = () => {
+  selectAll.value = products.value.length > 0 && products.value.every(product => selectedProducts.value.has(product.id))
+}
+
+// ========== 收藏功能方法 ==========
+
+// 检查商品下载状态
+const checkDownloadStatus = async (productIds) => {
+  try {
+    // 未登录时跳过检查
+    if (!localStorage.getItem('api_sign_key')) {
+      console.log('⚠️ 未登录，跳过下载状态检查')
+      return
+    }
+    const requestData = { productIds }
+    const encryptedData = encryptionService.prepareData(requestData, true)
+    const signedData = apiSignature.sign(encryptedData)
+    
+    const response = await fetch('/shop/api/download-center/check-downloaded', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(signedData)
+    })
+    
+    const result = await response.json()
+    
+    if (result.success && result.data) {
+      // 更新下载状态集合
+      downloadedProductsSet.value.clear()
+      result.data.downloadedProductIds.forEach(id => {
+        downloadedProductsSet.value.add(id)
+      })
+    }
+  } catch (error) {
+    console.error('检查下载状态失败:', error)
+  }
+}
+
+// 判断商品是否已下载
+const isProductDownloaded = (productId) => {
+  return downloadedProductsSet.value.has(productId)
+}
+
+// 检查商品收藏状态
+const checkFavoriteStatus = async (productIds) => {
+  try {
+    // 未登录时跳过检查
+    if (!localStorage.getItem('api_sign_key')) {
+      console.log('⚠️ 未登录，跳过收藏状态检查')
+      return
+    }
+    const requestData = { productIds }
+    const encryptedData = encryptionService.prepareData(requestData, true)
+    const signedData = apiSignature.sign(encryptedData)
+    
+    const response = await fetch('/shop/api/favorite/check-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(signedData)
+    })
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      favoritedProductsMap.value.clear()
+      Object.entries(result.favoritedProducts).forEach(([productId, status]) => {
+        favoritedProductsMap.value.set(parseInt(productId), status)
+      })
+    }
+  } catch (error) {
+    console.error('检查收藏状态失败:', error)
+  }
+}
+
+// 加载收藏分组列表
+const loadFavoriteGroups = async () => {
+  try {
+    const requestData = {}
+    const encryptedData = encryptionService.prepareData(requestData, true)
+    const signedData = apiSignature.sign(encryptedData)
+    
+    const response = await fetch('/shop/api/favorite/groups', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(signedData)
+    })
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      favoriteGroups.value = result.groups
+    }
+  } catch (error) {
+    console.error('加载收藏分组失败:', error)
+  }
+}
+
+// 创建新分组
+const createNewGroup = async () => {
+  if (!newGroup.value.groupName.trim()) {
+    ElMessage.warning(t('groupNameRequired'))
+    return
+  }
+  
+  try {
+    const requestData = newGroup.value
+    const encryptedData = encryptionService.prepareData(requestData, true)
+    const signedData = apiSignature.sign(encryptedData)
+    
+    const response = await fetch('/shop/api/favorite/group/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(signedData)
+    })
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      ElMessage.success(t('createGroupSuccess'))
+      showCreateGroupForm.value = false
+      newGroup.value = { groupName: '', groupDescription: '' }
+      await loadFavoriteGroups()
+      selectedGroupId.value = result.groupId
+    } else {
+      const lang = localStorage.getItem('app.lang') || 'zh-CN'
+      const errorMsg = lang === 'en' ? result.messageEn || result.message : result.message
+      ElMessage.error(errorMsg || t('createGroupFailed'))
+    }
+  } catch (error) {
+    console.error('创建分组失败:', error)
+    ElMessage.error(t('createGroupFailed'))
+  }
+}
+
+// 切换单个商品收藏状态
+const toggleFavorite = async (productId) => {
+  // 未登录时提示登录
+  if (!localStorage.getItem('api_sign_key')) {
+    ElMessage.warning(currentLang.value === 'en' ? 'Please log in first' : '请先登录')
+    return
+  }
+  
+  const favoriteInfo = favoritedProductsMap.value.get(productId)
+  
+  if (favoriteInfo && favoriteInfo.isFavorited) {
+    // 已收藏 → 取消收藏
+    await removeFavorite(productId, favoriteInfo.favoriteId)
+  } else {
+    // 未收藏 → 打开分组选择弹窗
+    isBatchFavorite.value = false
+    currentFavoriteProductId.value = productId
+    showGroupSelectorModal.value = true
+    await loadFavoriteGroups()
+  }
+}
+
+// 添加单个商品到收藏
+const addSingleFavorite = async (productId, groupId) => {
+  try {
+    const requestData = { productId, groupId }
+    const encryptedData = encryptionService.prepareData(requestData, true)
+    const signedData = apiSignature.sign(encryptedData)
+    
+    const response = await fetch('/shop/api/favorite/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(signedData)
+    })
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      // 更新前端状态 - 确保使用后端返回的最新 favoriteId
+      favoritedProductsMap.value.set(productId, {
+        isFavorited: true,
+        favoriteId: result.favoriteId || result.favorite?.id, // 兼容不同的返回格式
+        groupId: groupId,
+        groupName: favoriteGroups.value.find(g => g.id === groupId)?.groupName
+      })
+      
+      // 如果是移动操作，显示移动提示
+      if (result.moved) {
+        ElMessage.success(currentLang.value === 'en' ? result.messageEn : result.message)
+      } else {
+        ElMessage.success(t('addFavoriteSuccess'))
+      }
+    } else {
+      const errorMsg = currentLang.value === 'en' ? result.messageEn : result.message
+      ElMessage.error(errorMsg)
+    }
+  } catch (error) {
+    console.error('收藏失败:', error)
+    ElMessage.error(t('addFavoriteSuccess'))
+  }
+}
+
+// 取消收藏
+const removeFavorite = async (productId, favoriteId) => {
+  try {
+    const requestData = { favoriteId }
+    const encryptedData = encryptionService.prepareData(requestData, true)
+    const signedData = apiSignature.sign(encryptedData)
+    
+    const response = await fetch('/shop/api/favorite/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(signedData)
+    })
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      // 更新前端状态
+      favoritedProductsMap.value.set(productId, { isFavorited: false })
+      ElMessage.success(t('removeFavoriteSuccess'))
+    } else {
+      const errorMsg = currentLang.value === 'en' ? result.messageEn : result.message
+      ElMessage.error(errorMsg)
+    }
+  } catch (error) {
+    console.error('取消收藏失败:', error)
+    ElMessage.error(t('removeFavoriteSuccess'))
+  }
+}
+
+// 批量添加商品到收藏
+const addBatchFavorite = async (productIds, groupId) => {
+  try {
+    const requestData = { productIds, groupId }
+    const encryptedData = encryptionService.prepareData(requestData, true)
+    const signedData = apiSignature.sign(encryptedData)
+    
+    const response = await fetch('/shop/api/favorite/batch-add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(signedData)
+    })
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      // 批量收藏后重新检查所有商品的收藏状态，确保 favoriteId 正确
+      await checkFavoriteStatus(productIds)
+      
+      // 显示智能提示（包含移动信息）
+      showBatchFavoriteResult(result.skippedCount, result.successCount, result.movedCount)
+      
+      // 清空选择
+      selectedProducts.value.clear()
+      selectAll.value = false
+    } else {
+      const errorMsg = currentLang.value === 'en' ? result.messageEn : result.message
+      ElMessage.error(errorMsg)
+    }
+  } catch (error) {
+    console.error('批量收藏失败:', error)
+    ElMessage.error(t('batchFavoriteSuccess'))
+  }
+}
+
+// 显示批量收藏结果提示
+const showBatchFavoriteResult = (skippedCount, successCount, movedCount = 0) => {
+  let message = ''
+  
+  if (movedCount > 0 && successCount === 0 && skippedCount === 0) {
+    // 全部是移动
+    message = t('batchFavoriteMoved', { count: movedCount })
+  } else if (movedCount > 0 && (successCount > 0 || skippedCount > 0)) {
+    // 有移动、有新增或跳过
+    message = t('batchFavoriteWithMoved', {
+      moved: movedCount,
+      skipped: skippedCount,
+      success: successCount
+    })
+  } else if (skippedCount === 0 && successCount > 0) {
+    // 只有新增
+    message = t('batchFavoriteSuccess', { count: successCount })
+  } else if (successCount === 0 && skippedCount > 0) {
+    // 全部跳过
+    message = t('allAlreadyFavorited')
+  } else {
+    // 有新增和跳过
+    message = t('batchFavoritePartial', {
+      skipped: skippedCount,
+      success: successCount
+    })
+  }
+  
+  ElMessage.success(message)
+}
+
+// 批量收藏商品
+const batchAddFavorites = async () => {
+  // 未登录时提示登录
+  if (!localStorage.getItem('api_sign_key')) {
+    ElMessage.warning(currentLang.value === 'en' ? 'Please log in first' : '请先登录')
+    return
+  }
+  
+  if (selectedProducts.value.size === 0) {
+    ElMessage.warning(t('pleaseSelectProducts'))
+    return
+  }
+  
+  isBatchFavorite.value = true
+  currentFavoriteProductId.value = null
+  showGroupSelectorModal.value = true
+  await loadFavoriteGroups()
+}
+
+// 确认收藏（单个或批量）
+const confirmFavorite = async () => {
+  if (!selectedGroupId.value) {
+    ElMessage.warning(t('pleaseSelectGroup'))
+    return
+  }
+  
+  // 判断是单个收藏还是批量收藏
+  if (currentFavoriteProductId.value) {
+    // 单个收藏
+    await addSingleFavorite(currentFavoriteProductId.value, selectedGroupId.value)
+  } else {
+    // 批量收藏
+    const selectedProductIds = Array.from(selectedProducts.value)
+    await addBatchFavorite(selectedProductIds, selectedGroupId.value)
+  }
+  
+  // 关闭弹窗
+  closeGroupSelectorModal()
+}
+
+// 关闭分组选择器弹窗
+const closeGroupSelectorModal = () => {
+  showGroupSelectorModal.value = false
+  currentFavoriteProductId.value = null
+  selectedGroupId.value = null
+  showCreateGroupForm.value = false
+  newGroup.value = { groupName: '', groupDescription: '' }
+  isBatchFavorite.value = false
+}
+
+// 判断商品是否已收藏
+const isProductFavorited = (productId) => {
+  const favoriteInfo = favoritedProductsMap.value.get(productId)
+  return favoriteInfo && favoriteInfo.isFavorited
+}
+
+// 分页相关方法
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    fetchProducts(page)
+  }
+}
+
+// 排序切换方法
+const handleSortChange = (sortValue) => {
+  if (selectedSort.value === sortValue) {
+    // 如果点击同一个排序选项，切换升降序
+    sortOrder.value = sortOrder.value === 'DESC' ? 'ASC' : 'DESC'
+  } else {
+    // 切换不同排序选项，默认降序
+    selectedSort.value = sortValue
+    sortOrder.value = 'DESC'
+  }
+  // 重新加载数据
+  fetchProducts(1)
+}
+
+watch(products, () => {
+  updateSelectAllState()
+})
+
+// 监听筛选条件变化，自动重新加载商品
+watch([selectedNewTime, selectedShipment, selectedSaleMode], () => {
+  fetchProducts(1)
+})
+
+onMounted(() => {
+  // 初始化当前语言
+  currentLang.value = localStorage.getItem('app.lang') || 'zh-CN'
+  
+  // 加载收藏多语言文件
+  loadFavoriteTranslations().then(() => {
+    // 翻译加载完成后设置标题
+    updatePageTitle()
+  })
+  
+  // 从 URL 参数中读取搜索关键词
+  const urlParams = new URLSearchParams(window.location.search)
+  const q = urlParams.get('q')
+  
+  if (q) {
+    // 如果有搜索关键词，设置并执行搜索
+    searchKeyword.value = q
+  }
+  
+  // 获取第一页商品数据
+  fetchProducts(1)
+  
+  // 监听语言变化事件
+  window.addEventListener('languagechange', handleLangChange)
+})
+
+onUnmounted(() => {
+  // 移除语言变化事件监听
+  window.removeEventListener('languagechange', handleLangChange)
+})
+
+// 在组件加载时检查分类数据
+console.log('初始分类数据:', {
+  category1List: category1List.value,
+  category2List: category2List.value,
+  category3List: category3List.value
+})
+
+function getNewTimeLabel(value) {
+  const option = newTimeOptions.value.find(o => o.value === value)
+  return option?.label || ''
+}
+
+function getShipmentLabel(value) {
+  const option = shipmentOptions.value.find(o => o.value === value)
+  return option?.label || ''
+}
+
+function getSaleModeLabel(value) {
+  const option = saleModeOptions.value.find(o => o.value === value)
+  return option?.label || ''
+}
+
+// 获取一级分类标题（支持中英文切换）
+function getCategory1Title(category) {
+  if (currentLang.value === 'en' && category?.titleEn) {
+    return category.titleEn
+  }
+  return category?.title || ''
+}
+
+// 获取二级分类标题（支持中英文切换）
+function getCategory2Title(category) {
+  if (currentLang.value === 'en' && category?.titleEn) {
+    return category.titleEn
+  }
+  return category?.title || ''
+}
+
+// 获取三级分类标题（支持中英文切换）
+function getCategory3Title(category) {
+  if (currentLang.value === 'en' && category?.titleEn) {
+    return category.titleEn
+  }
+  return category?.title || ''
+}
+
+// 获取一级分类名称（支持中英文切换，使用ID）
+function getCategory1Name(id) {
+  const category = category1List.value.find(c => c.id === id)
+  if (currentLang.value === 'en' && category?.titleEn) {
+    return category.titleEn
+  }
+  return category?.title || ''
+}
+
+// 获取二级分类名称（支持中英文切换，使用ID）
+function getCategory2Name(id) {
+  const category = category2List.value.find(c => c.id === id)
+  if (currentLang.value === 'en' && category?.titleEn) {
+    return category.titleEn
+  }
+  return category?.title || ''
+}
+
+// 获取三级分类名称（支持中英文切换，使用ID）
+function getCategory3Name(id) {
+  const category = category3List.value.find(c => c.id === id)
+  if (currentLang.value === 'en' && category?.titleEn) {
+    return category.titleEn
+  }
+  return category?.title || ''
+}
+
+// 获取商品标题（支持中英文切换）
+function getProductTitle(product) {
+  if (currentLang.value === 'en' && product?.titleEn) {
+    return product.titleEn
+  }
+  return product?.title || ''
+}
+
+// 获取商品当前选中的区域
+function getSelectedRegion(product) {
+  // 如果没有设置过,返回第一个区域
+  if (!productSelectedRegions.value.has(product.id)) {
+    return product.shippingRegions && product.shippingRegions.length > 0 
+      ? product.shippingRegions[0] 
+      : null
+  }
+  return productSelectedRegions.value.get(product.id)
+}
+
+// 选择区域
+function selectRegion(product, region) {
+  productSelectedRegions.value.set(product.id, region)
+}
+
+// 获取当前区域的价格信息
+function getCurrentPriceInfo(product) {
+  const region = getSelectedRegion(product)
+  if (!region || !product.regionConfigs || !product.regionConfigs[region]) {
+    return {
+      originalPrice: product.originalPrice,
+      sellingPrice: product.sellingPrice,
+      discountRate: product.discountRate,
+      currency: product.currency || 'USD'
+    }
+  }
+  return product.regionConfigs[region].price
+}
+
+// 获取当前区域的库存
+function getCurrentStock(product) {
+  const region = getSelectedRegion(product)
+  if (!region || !product.regionConfigs || !product.regionConfigs[region]) {
+    return product.stock || 0
+  }
+  return product.regionConfigs[region].stock || 0
+}
+
+// 获取当前区域的售价
+function getCurrentSellingPrice(product) {
+  return getCurrentPriceInfo(product).sellingPrice
+}
+
+// 获取当前区域的折扣率
+function getCurrentDiscount(product) {
+  const discountRate = getCurrentPriceInfo(product).discountRate
+  return discountRate ? parseFloat(discountRate) : 0
+}
+
+// 获取当前区域的币种
+function getCurrentCurrency(product) {
+  // 【原有显示逻辑 - 已注释】
+  // 原逻辑：仏商品数据中读取当前区域的货币符号
+  // return getCurrentPriceInfo(product).currency
+  
+  // 【新逻辑】使用从SiteConfig读取的网站货币符号
+  return siteCurrency.value
+}
+
+// 计算折扣后价格
+function calculateDiscountedPrice(product) {
+  const priceInfo = getCurrentPriceInfo(product)
+  const sellingPrice = parseFloat(priceInfo.sellingPrice || 0)
+  const discountRate = parseFloat(priceInfo.discountRate || 0)
+  return sellingPrice * (1 - discountRate)
+}
+
+// 格式化折扣显示(如果是0.01就显示-1%)
+function formatDiscount(discountRate) {
+  const percent = Math.round(discountRate * 100)
+  return percent + '%'
+}
+
+// ========== 下载功能方法 ==========
+
+// 检查商品是否已下载
+const checkDownloadedProducts = async (productIds) => {
+  try {
+    // 准备请求数据
+    const requestData = {
+      productIds: productIds
+    }
+    
+    // 加密数据
+    const encryptedData = encryptionService.prepareData(requestData, true)
+    
+    // 生成签名
+    const signedData = apiSignature.sign(encryptedData)
+    
+    // 发送请求
+    const response = await fetch('/shop/api/download-center/check-downloaded', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify(signedData)
+    })
+    
+    const result = await response.json()
+    
+    if (result.success && result.data) {
+      return result.data.downloadedProductIds || []
+    }
+    
+    return []
+  } catch (error) {
+    console.error('检查下载状态失败:', error)
+    return []
+  }
+}
+
+// 获取下载额度信息
+const fetchDownloadStats = async () => {
+  try {
+    // 准备请求数据
+    const requestData = {
+      page: 1,
+      pageSize: 1 // 只需要统计信息，不需要记录列表
+    }
+    
+    // 加密数据
+    const encryptedData = encryptionService.prepareData(requestData, true)
+    
+    // 生成签名
+    const signedData = apiSignature.sign(encryptedData)
+    
+    // 发送请求
+    const response = await fetch('/shop/api/download-center/list', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify(signedData)
+    })
+    
+    const result = await response.json()
+    
+    if (result.success && result.data.downloadStats) {
+      downloadStats.value = {
+        downloadQuota: result.data.downloadStats.downloadQuota || 0,
+        downloadUsed: result.data.downloadStats.downloadUsed || 0,
+        downloadRemaining: result.data.downloadStats.downloadRemaining || 0
+      }
+    }
+  } catch (error) {
+    console.error('获取下载额度失败:', error)
+  }
+}
+
+// 下载单个商品
+const downloadProduct = async (productId) => {
+  // 未登录时提示登录
+  if (!localStorage.getItem('api_sign_key')) {
+    ElMessage.warning(currentLang.value === 'en' ? 'Please log in first' : '请先登录')
+    return
+  }
+  
+  try {
+    // 准备请求数据
+    const requestData = {
+      productId: productId,
+      lang: currentLang.value
+    }
+    
+    // 加密数据
+    const encryptedData = encryptionService.prepareData(requestData, true)
+    
+    // 生成签名
+    const signedData = apiSignature.sign(encryptedData)
+    
+    // 发送请求
+    const response = await fetch('/shop/api/download-center/download', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify(signedData)
+    })
+    
+    const result = await response.json()
+    
+    if (!response.ok || !result.success) {
+      // 使用后端返回的错误消息，根据当前语言选择
+      const errorMessage = currentLang.value === 'en' 
+        ? (result.messageEn || result.message || t('downloadError'))
+        : (result.message || t('downloadError'))
+      throw new Error(errorMessage)
+    }
+    
+    // 显示成功提示
+    ElMessage.success(t('downloadSuccess'))
+  } catch (error) {
+    console.error('下载失败:', error)
+    ElMessage.error(error.message || t('downloadError'))
+  }
+}
+
+// 批量下载商品
+const batchDownloadProducts = async () => {
+  // 未登录时提示登录
+  if (!localStorage.getItem('api_sign_key')) {
+    ElMessage.warning(currentLang.value === 'en' ? 'Please log in first' : '请先登录')
+    return
+  }
+  
+  // 检查是否正在下载
+  if (batchDownloading.value) {
+    return
+  }
+  
+  // 检查是否选择了商品
+  if (selectedProducts.value.size === 0) {
+    ElMessage.warning(t('pleaseSelectProducts'))
+    return
+  }
+  
+  // 显示检查下载状态的加载提示
+  const checkingMessage = ElMessage({
+    message: t('checkingDownloadStatus'),
+    type: 'info',
+    duration: 0
+  })
+  
+  try {
+    // 检查哪些商品已下载过
+    const selectedProductIds = Array.from(selectedProducts.value)
+    const downloadedProductIds = await checkDownloadedProducts(selectedProductIds)
+    
+    // 关闭检查提示
+    checkingMessage.close()
+    
+    // 过滤掉已下载的商品
+    const undownloadedProductIds = selectedProductIds.filter(id => !downloadedProductIds.includes(id))
+    
+    // 如果有已下载的商品，显示提示
+    if (downloadedProductIds.length > 0) {
+      // 获取已下载商品的信息
+      const downloadedProductNames = products.value
+        .filter(p => downloadedProductIds.includes(p.id))
+        .map(p => getProductTitle(p))
+        .slice(0, 5) // 最多显示5个
+      
+      let message = t('downloadedProducts') + '\n'
+      downloadedProductNames.forEach((name, index) => {
+        message += `${index + 1}. ${name}\n`
+      })
+      
+      if (downloadedProductIds.length > 5) {
+        const moreText = currentLang.value === 'en' 
+          ? `... and ${downloadedProductIds.length} more products in total`
+          : `... 等共 ${downloadedProductIds.length} 个商品`
+        message += moreText + '\n'
+      }
+      
+      if (undownloadedProductIds.length > 0) {
+        message += '\n' + t('actualDownloadCount').replace('{count}', undownloadedProductIds.length)
+      }
+      
+      await ElMessageBox.alert(message, t('alreadyDownloaded'), {
+        confirmButtonText: t('confirm'),
+        type: 'warning',
+        dangerouslyUseHTMLString: false
+      })
+    }
+    
+    // 如果所有商品都已下载，直接返回
+    if (undownloadedProductIds.length === 0) {
+      ElMessage.info(t('allDownloaded'))
+      return
+    }
+    
+    // 获取最新的下载额度信息
+    await fetchDownloadStats()
+    
+    const selectedCount = undownloadedProductIds.length
+    const remaining = downloadStats.value.downloadRemaining
+    
+    // 检查下载额度
+    if (remaining <= 0) {
+      ElMessageBox.alert(
+        t('quotaExhaustedMsg'),
+        t('quotaExhausted'),
+        {
+          confirmButtonText: t('confirm'),
+          type: 'warning'
+        }
+      )
+      return
+    }
+    
+    // 如果选中的商品数量超过剩余额度，提示用户
+    let confirmMessage = ''
+    let maxDownload = selectedCount
+    
+    if (selectedCount > remaining) {
+      maxDownload = remaining
+      confirmMessage = t('quotaInsufficientMsg')
+        .replace('{remaining}', remaining)
+        .replace('{max}', maxDownload)
+    } else {
+      confirmMessage = t('batchDownloadConfirm').replace('{count}', selectedCount)
+    }
+    
+    // 确认对话框
+    await ElMessageBox.confirm(
+      confirmMessage,
+      t('confirmTitle'),
+      {
+        confirmButtonText: t('confirm'),
+        cancelButtonText: t('cancel'),
+        type: selectedCount > remaining ? 'warning' : 'info'
+      }
+    )
+    
+    // 设置加载状态
+    batchDownloading.value = true
+    
+    // 显示加载提示
+    const loadingMessage = ElMessage({
+      message: t('downloading'),
+      type: 'info',
+      duration: 0,
+      iconClass: 'el-icon-loading'
+    })
+    
+    try {
+      // 用户确认后，下载指定数量的商品（只下载未下载过的）
+      const productIds = undownloadedProductIds.slice(0, maxDownload)
+      let successCount = 0
+      let failCount = 0
+      
+      for (const productId of productIds) {
+        try {
+          // 准备请求数据
+          const requestData = {
+            productId: productId,
+            lang: currentLang.value
+          }
+          
+          // 加密数据
+          const encryptedData = encryptionService.prepareData(requestData, true)
+          
+          // 生成签名
+          const signedData = apiSignature.sign(encryptedData)
+          
+          // 发送请求
+          const response = await fetch('/shop/api/download-center/download', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(signedData)
+          })
+          
+          const result = await response.json()
+          
+          if (response.ok) {
+            successCount++
+          } else {
+            failCount++
+            console.error(`商品 ${productId} 下载失败:`, result.error)
+          }
+        } catch (error) {
+          failCount++
+          console.error(`商品 ${productId} 下载失败:`, error)
+        }
+        
+        // 添加小延迟，避免请求过快
+        await new Promise(resolve => setTimeout(resolve, 200))
+      }
+      
+      // 关闭加载提示
+      loadingMessage.close()
+      
+      // 显示结果提示
+      if (failCount === 0) {
+        const successMsg = currentLang.value === 'en'
+          ? `Download task added to queue (${successCount}/${productIds.length})`
+          : `下载任务已加入队列 (${successCount}/${productIds.length})`
+        ElMessage.success(successMsg)
+      } else {
+        const warningMsg = currentLang.value === 'en'
+          ? `Success: ${successCount}, Failed: ${failCount}`
+          : `成功: ${successCount}, 失败: ${failCount}`
+        ElMessage.warning(warningMsg)
+      }
+      
+      // 清空选择
+      selectedProducts.value.clear()
+      selectAll.value = false
+      
+      // 更新下载额度
+      await fetchDownloadStats()
+    } finally {
+      // 无论成功失败，都要重置加载状态
+      batchDownloading.value = false
+    }
+  } catch (error) {
+    // 关闭检查提示（如果还没关闭）
+    checkingMessage.close()
+    
+    // 用户取消或错误
+    if (error !== 'cancel') {
+      console.error('批量下载错误:', error)
+    }
+  }
+}
+</script>
+
+<style scoped>
+/* 排序栏样式（模拟附件样式） */
+.sort-wrapper{background:#fff}
+.sort-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #ddd}
+.sort-list{display:flex;align-items:center;gap:0;list-style:none;padding:0;margin:0}
+.sort-item{float:left}
+.sort-link{display:inline-flex;align-items:center;gap:4px;padding:0 20px;line-height:36px;color:#333;text-decoration:none;border-right:1px solid #ddd;cursor:pointer}
+.sort-item.active .sort-link{background:#eee;color:#e4393c}
+
+/* 箭头样式 */
+.sort-arrow{display:inline-block;width:0;height:0;margin-left:4px;border-left:4px solid transparent;border-right:4px solid transparent}
+.sort-arrow.arrow-up{border-bottom:6px solid #e4393c}
+.sort-arrow.arrow-down{border-top:6px solid #e4393c}
+
+.li-2{margin-left:20px;padding-left:20px}
+.onlylook{display:inline-flex;align-items:center;position:relative;height:36px}
+.hidden-checkbox{display:none}
+.onlylook-text{margin-left:8px;color:#333}
+.small-input{width:50px;height:24px;padding:3px 6px;border:1px solid #d5d5d5;border-radius:2px;margin:0 6px}
+.button-apply{background:#cb261c;color:#fff;border:none;padding:4px 8px;border-radius:2px;margin-left:8px;cursor:pointer}
+
+/* 移除输入框和按钮的焦点黑框 */
+.hidden-checkbox:focus,
+.small-input:focus,
+.button-apply:focus {
+  outline: none;
+}
+
+/* 为输入框添加柔和的焦点样式 */
+.small-input:focus {
+  border-color: #cb261c;
+  box-shadow: 0 0 0 1px rgba(203, 38, 28, 0.1);
+}
+
+/* 固定每个商品的价格区域高度并垂直居中 */
+.price-box{height:72px;min-height:72px;display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden}
+.price-box .text-lg{line-height:1}
+.price-box .text-sm{opacity:0.9}
+
+/* 分页容器样式 */
+:deep(.pagination-container) {
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  margin: 20px 0 !important;
+  padding-top: 0 !important;
+  border-top: none !important;
+}
+
+/* 收藏分组选择器弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.btn-close:hover {
+  color: #cb261c;
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.group-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.group-item:hover {
+  border-color: #cb261c;
+  background: #fef2f2;
+}
+
+.group-item.active {
+  border-color: #cb261c;
+  background: #fef2f2;
+}
+
+.group-info {
+  flex: 1;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.group-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.group-count {
+  font-size: 13px;
+  color: #6b7280;
+  white-space: nowrap;
+  margin-left: 12px;
+}
+
+.group-check {
+  color: #cb261c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-create-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-create-group:hover {
+  border-color: #cb261c;
+  color: #cb261c;
+  background: #fef2f2;
+}
+
+.create-group-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #111827;
+  transition: all 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #cb261c;
+  box-shadow: 0 0 0 3px rgba(203, 38, 28, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-cancel,
+.btn-confirm,
+.btn-primary,
+.btn-secondary {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel,
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.btn-cancel:hover,
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.btn-confirm,
+.btn-primary {
+  background: #cb261c;
+  color: #fff;
+}
+
+.btn-confirm:hover,
+.btn-primary:hover {
+  background: #a81f18;
+}
+</style>

@@ -1,0 +1,85 @@
+商品的状态status必须是approved
+商品主图是 商品表 (Product) mainImage
+主图下面那10个副图可以点击的。第1张是 商品表 (Product) mainImage,其余的是商品详情图。detailImages里的 "canBeMain": true都图片，附图最多10张
+ * detail_images         详情图数组（存储七牛云key和是否可作为主图标识）
+ *                       数据格式如下：
+ *                       [
+ *                         {
+ *                           "key": "七牛云key",
+ *                           "canBeMain": false  // 默认false，不可作为主图
+ *                         },
+ *                         {
+ *                           "key": "七牛云key",
+ *                           "canBeMain": true   // true表示可作为主图
+ *                         }
+ *                       ]
+
+标题是 title
+SKU：sku
+SPU：spu
+首次上架 publishDate
+采购券：如果 enableDiscount为true就显示，显示无采购券
+minAmount            满减触发条件，如满100元
+discountAmount       满足条件后减免的金额，如减20元
+enableDiscount       开关控制是否启用该商品的满减活动
+服务说明：
+supportDropship      是否支持一件代发：0-不支持, 1-支持
+supportWholesale     是否支持批发：0-不支持, 1-支持
+supportCircle_buy    是否支持圈货：0-不支持, 1-支持
+supportSelf_pickup   是否支持自提：0-不支持, 1-支持
+发货区域：shippingRegion json数组
+相关商品推荐:二级分类下，销量最高的6个商品，只返回 
+id 
+thumbnailImage 后台签名之后的
+title: "防晒霜 SPF50+ PA++++"
+titleEn: "Sunscreen SPF50+ PA++++"
+
+详细信息
+length                长度（cm）
+width                 宽度（cm）
+height                高度（cm）
+weight                重量（g）
+
+详细信心下面的文字
+richContent
+文字下面的图片
+detailImages
+shippingAddress      发货地址（纯文本）
+returnAddress        退货地址（纯文本）
+
+
+商品返回数据 product:{....}下面是返回字段
+currency: "CNY"
+id: 449
+originalPrice: "89.0000"
+sellingPrice: "89.0000"
+sku: "DEMO-SKU-5798-1762070547-21"
+spu: "DEMO-SPU-5798"
+stock: 2000
+mainImage:经过签名的图片
+detailImages:json数组里面的图片也经过签名了
+title: "防晒霜 SPF50+ PA++++"
+titleEn: "Sunscreen SPF50+ PA++++"
+minAmount            满减触发条件，如满100元
+discountAmount       满足条件后减免的金额，如减20元
+enableDiscount       开关控制是否启用该商品的满减活动
+supportDropship      是否支持一件代发：0-不支持, 1-支持
+supportWholesale     是否支持批发：0-不支持, 1-支持
+supportCircle_buy    是否支持圈货：0-不支持, 1-支持
+supportSelf_pickup   是否支持自提：0-不支持, 1-支持
+shippingRegion json数组
+length                长度（cm）
+width                 宽度（cm）
+height                高度（cm）
+weight                重量（g）
+richContent 商品详情
+shippingAddress      发货地址（纯文本）
+returnAddress        退货地址（纯文本）
+
+
+
+物流与支付信息 ProductLogisticsPaymentInfo 最后一条记录
+plinfo:{....}下面是返回字段
+id             
+content     
+contentEN    

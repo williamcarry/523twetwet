@@ -1,0 +1,9 @@
+{% extends 'shop/base.html.twig' %}
+
+{% block title %}{% endblock %}
+
+{% block body %}
+<div {{ vue_component('shop/pages/FAQDetailPage', {
+    'code': code
+}) }}></div>
+{% endblock %}

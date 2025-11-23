@@ -1,0 +1,10 @@
+{% extends 'supplier/base.html.twig' %}
+
+{% block title %}充值记录{% endblock %}
+
+{% block content %}
+<div {{ vue_component('supplier/RechargeList', {
+    'supplierLoginPath': supplierLoginPath,
+    'autoLoad': true
+}) }}></div>
+{% endblock %}

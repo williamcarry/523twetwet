@@ -1,0 +1,92 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: saleyee-redis-prod
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: always
+    networks:
+      - saleyee-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "xK9mP2vL8nQ5wR7tY3bN6cM4", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: saleyee-rabbitmq-prod
+    ports:
+      - "5673:5672"   # AMQP port (映射到宿主机5673端口)
+      - "15673:15672" # Management UI (映射到宿主机15673端口)
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: fJ8hD4pS2kL9vN5qW7mR3
+      RABBITMQ_DEFAULT_VHOST: /
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    restart: always
+    networks:
+      - saleyee-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  mercure:
+    image: dunglas/mercure:v0.15
+    container_name: saleyee-mercure-prod
+    restart: always
+    environment:
+      SERVER_NAME: ':80'
+      MERCURE_PUBLISHER_JWT_KEY: '3f8a7c2e9b4d6f1a8c5e7b9d2a4f6c8e1b3d5a7f9c2e4b6d8a1c3e5f7b9d2a4f6'
+      MERCURE_SUBSCRIBER_JWT_KEY: '3f8a7c2e9b4d6f1a8c5e7b9d2a4f6c8e1b3d5a7f9c2e4b6d8a1c3e5f7b9d2a4f6'
+      MERCURE_EXTRA_DIRECTIVES: |
+        cors_origins *
+        anonymous
+    ports:
+      - "3000:80"
+    volumes:
+      - mercure-data:/data
+      - mercure-config:/config
+    networks:
+      - saleyee-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/.well-known/mercure"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  saleyee-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+  rabbitmq-data:
+    driver: local
+  mercure-data:
+    driver: local
+  mercure-config:
+    driver: local

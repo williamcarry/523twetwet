@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %}Welcome!{% endblock %}</title>
+
+        {% block stylesheets %}
+            {# 样式由子模板自行引入，避免冲突 #}
+        {% endblock %}
+
+        {% block javascripts %}
+            {# 脚本由子模板自行引入，避免冲突 #}
+        {% endblock %}
+    </head>
+    <body>
+        {% block body %}{% endblock %}
+    </body>
+</html>

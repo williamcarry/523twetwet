@@ -1,0 +1,10 @@
+{% extends 'admin/admin_layout.html.twig' %}
+
+{% block title %}工厂直采管理{% endblock %}
+
+{% block body %}
+<div {{ vue_component('admin/ProductInquiryList', {
+    'adminLoginPath': adminLoginPath,
+    'autoLoad': true
+}) }}></div>
+{% endblock %}

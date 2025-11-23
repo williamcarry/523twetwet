@@ -1,0 +1,9 @@
+{% extends 'admin/admin_layout.html.twig' %}
+
+{% block title %}订单管理{% endblock %}
+
+{% block body %}
+<div {{ vue_component('admin/OrderList', {
+    'adminLoginPath': adminLoginPath
+}) }}></div>
+{% endblock %}

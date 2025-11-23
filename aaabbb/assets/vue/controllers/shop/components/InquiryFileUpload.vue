@@ -1,0 +1,809 @@
+<template>
+  <div class="inquiry-file-upload-container">
+    <!-- 上传区域 -->
+    <div
+      class="upload-drop-zone"
+      :class="{ 'is-dragging': isDragging, 'is-disabled': files.length >= maxFiles }"
+      @click="triggerFileInput"
+      @drop.prevent="handleDrop"
+      @dragover.prevent="isDragging = true"
+      @dragleave="isDragging = false"
+    >
+      <input
+        ref="fileInput"
+        type="file"
+        multiple
+        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,.pdf,.doc,.docx,.xls,.xlsx,.rar,.zip,.7z,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/x-rar-compressed,application/zip,application/x-zip-compressed,application/x-7z-compressed"
+        style="display: none"
+        :disabled="files.length >= maxFiles"
+        @change="handleFileSelect"
+      />
+      <div class="upload-icon-wrapper">
+        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      </div>
+      <p class="upload-text">{{ t('clickOrDragToUpload') }}</p>
+      <p class="upload-hint">{{ t('uploadHint') }}</p>
+      <p class="upload-limit">{{ files.length }}/{{ maxFiles }} {{ t('filesUploaded') }}</p>
+    </div>
+
+    <!-- 文件列表 -->
+    <div v-if="files.length > 0" class="file-list">
+      <div
+        v-for="(file, index) in files"
+        :key="index"
+        class="file-item"
+        :class="{ 'is-uploading': file.uploading, 'is-error': file.error }"
+      >
+        <!-- 图片预览或文件图标 -->
+        <div 
+          class="file-icon"
+          :class="{ 'is-image-preview': isImage(file.type) && file.previewUrl }"
+          @click="isImage(file.type) && file.previewUrl ? openImagePreview(file.previewUrl) : null"
+        >
+          <!-- 图片预览 -->
+          <img 
+            v-if="isImage(file.type) && file.previewUrl" 
+            :src="file.previewUrl" 
+            :alt="file.name"
+            class="preview-thumbnail"
+          />
+          <!-- 图片图标 -->
+          <svg v-else-if="isImage(file.type)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          <!-- 文件图标 -->
+          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+            <polyline points="13 2 13 9 20 9"></polyline>
+          </svg>
+        </div>
+
+        <!-- 文件信息 -->
+        <div class="file-info">
+          <p class="file-name" :title="file.name">{{ file.name }}</p>
+          <p class="file-size">{{ formatFileSize(file.size) }}</p>
+        </div>
+
+        <!-- 上传进度 -->
+        <div v-if="file.uploading" class="file-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" :style="{ width: file.progress + '%' }"></div>
+          </div>
+          <span class="progress-text">{{ file.progress }}%</span>
+        </div>
+
+        <!-- 成功标记 -->
+        <div v-else-if="file.uploaded && !file.error" class="file-status success">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+
+        <!-- 错误标记 -->
+        <div v-else-if="file.error" class="file-status error">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+        </div>
+
+        <!-- 删除按钮 -->
+        <button
+          class="btn-remove"
+          type="button"
+          @click.stop="removeFile(index, file.key)"
+          :disabled="file.uploading"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+
+        <!-- 错误提示 -->
+        <p v-if="file.errorMessage" class="error-message">{{ file.errorMessage }}</p>
+      </div>
+    </div>
+
+    <!-- 全局错误提示 -->
+    <div v-if="globalError" class="global-error">
+      {{ globalError }}
+    </div>
+    
+    <!-- 图片预览弹窗 -->
+    <div v-if="previewImageUrl" class="image-preview-modal" @click="closeImagePreview">
+      <div class="preview-content" @click.stop>
+        <img :src="previewImageUrl" :alt="t('imagePreview')" class="preview-image" />
+        <button class="btn-close-preview" @click="closeImagePreview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, watch, computed } from 'vue'
+import apiSignature from '../services/apiSignature.js'
+
+const props = defineProps({
+  modelValue: {
+    type: Array,
+    default: () => []
+  },
+  maxFiles: {
+    type: Number,
+    default: 10
+  },
+  translations: {
+    type: Object,
+    default: () => ({})
+  }
+})
+
+const emit = defineEmits(['update:modelValue', 'upload-success', 'upload-error'])
+
+const fileInput = ref(null)
+const files = ref([])
+const isDragging = ref(false)
+const globalError = ref('')
+const previewImageUrl = ref('')
+
+// 翻译函数
+const t = (key) => {
+  const defaultTranslations = {
+    clickOrDragToUpload: '点击或拖拽文件到此处上传',
+    uploadHint: '支持JPG、JPEG、PNG、GIF、WEBP图片，PDF、DOC、DOCX、XLS、XLSX文档，RAR、ZIP、7Z压缩包，单个文件不超过10MB',
+    filesUploaded: '个文件',
+    imagePreview: '图片预览',
+  }
+  return props.translations[key] || defaultTranslations[key] || key
+}
+
+// 监听 modelValue 变化
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    if (Array.isArray(newVal) && newVal.length > 0) {
+      files.value = newVal.map(item => ({
+        ...item,
+        uploaded: true,
+        uploading: false,
+        error: false,
+        progress: 100
+      }))
+    }
+  },
+  { immediate: true }
+)
+
+// 判断是否是图片
+const isImage = (type) => {
+  return type && type.startsWith('image/')
+}
+
+// 格式化文件大小
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+}
+
+// 触发文件选择
+const triggerFileInput = () => {
+  if (files.value.length >= props.maxFiles) {
+    globalError.value = `最多只能上传${props.maxFiles}个文件`
+    setTimeout(() => globalError.value = '', 3000)
+    return
+  }
+  fileInput.value?.click()
+}
+
+// 文件选择处理
+const handleFileSelect = async (event) => {
+  const selectedFiles = Array.from(event.target.files || [])
+  await processFiles(selectedFiles)
+  // 清空input，允许重复选择同一文件
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
+// 拖拽处理
+const handleDrop = async (event) => {
+  isDragging.value = false
+  if (files.value.length >= props.maxFiles) {
+    globalError.value = `最多只能上传${props.maxFiles}个文件`
+    setTimeout(() => globalError.value = '', 3000)
+    return
+  }
+  const droppedFiles = Array.from(event.dataTransfer?.files || [])
+  await processFiles(droppedFiles)
+}
+
+// 处理文件
+const processFiles = async (selectedFiles) => {
+  globalError.value = ''
+  
+  // 检查文件数量
+  const remainingSlots = props.maxFiles - files.value.length
+  if (selectedFiles.length > remainingSlots) {
+    globalError.value = `最多还能上传${remainingSlots}个文件`
+    selectedFiles = selectedFiles.slice(0, remainingSlots)
+  }
+  
+  for (const file of selectedFiles) {
+    // 验证文件类型（通过MIME类型和文件扩展名）
+    const allowedMimeTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/x-rar-compressed',
+      'application/vnd.rar',
+      'application/x-rar',
+      'application/zip',
+      'application/x-zip-compressed',
+      'application/x-7z-compressed'
+    ]
+    
+    // 获取文件扩展名
+    const fileName = file.name.toLowerCase()
+    const allowedExtensions = [
+      '.jpg', '.jpeg', '.png', '.gif', '.webp',
+      '.pdf',
+      '.doc', '.docx',
+      '.xls', '.xlsx',
+      '.rar', '.zip', '.7z'
+    ]
+    
+    // 检查MIME类型或文件扩展名
+    const hasValidMimeType = allowedMimeTypes.includes(file.type)
+    const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext))
+    
+    if (!hasValidMimeType && !hasValidExtension) {
+      globalError.value = `不支持的文件类型: ${file.name}`
+      console.log('文件类型:', file.type, '文件名:', file.name)
+      continue
+    }
+    
+    // 验证文件大小
+    if (file.size > 10 * 1024 * 1024) {
+      globalError.value = `文件 ${file.name} 超过10MB，无法上传`
+      continue
+    }
+    
+    // 添加到列表
+    const fileItem = {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      uploading: true,
+      uploaded: false,
+      error: false,
+      errorMessage: '',
+      progress: 0,
+      key: '',
+      previewUrl: ''
+    }
+    
+    files.value.push(fileItem)
+    
+    // 上传文件
+    await uploadFile(file, fileItem)
+  }
+}
+
+// 上传文件到七牛云
+const uploadFile = async (file, fileItem) => {
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    // 生成签名
+    const signedData = apiSignature.sign({})
+    formData.append('timestamp', signedData.timestamp)
+    formData.append('nonce', signedData.nonce)
+    formData.append('signature', signedData.signature)
+    
+    const xhr = new XMLHttpRequest()
+    
+    // 上传进度
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        fileItem.progress = Math.round((e.loaded / e.total) * 100)
+      }
+    })
+    
+    // 上传完成
+    xhr.addEventListener('load', () => {
+      if (xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText)
+        
+        if (response.success) {
+          fileItem.uploading = false
+          fileItem.uploaded = true
+          fileItem.key = response.key
+          fileItem.previewUrl = response.previewUrl
+          
+          // 更新父组件
+          updateModelValue()
+          emit('upload-success', {
+            key: response.key,
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            previewUrl: response.previewUrl
+          })
+        } else {
+          fileItem.uploading = false
+          fileItem.error = true
+          fileItem.errorMessage = response.message || '上传失败'
+          emit('upload-error', response.message)
+        }
+      } else {
+        fileItem.uploading = false
+        fileItem.error = true
+        fileItem.errorMessage = '上传失败，请重试'
+        emit('upload-error', '上传失败')
+      }
+    })
+    
+    // 上传错误
+    xhr.addEventListener('error', () => {
+      fileItem.uploading = false
+      fileItem.error = true
+      fileItem.errorMessage = '上传出错，请重试'
+      emit('upload-error', '上传出错')
+    })
+    
+    xhr.open('POST', '/shop/api/inquiry/upload-attachment')
+    xhr.send(formData)
+    
+  } catch (error) {
+    fileItem.uploading = false
+    fileItem.error = true
+    fileItem.errorMessage = error.message || '上传失败'
+    emit('upload-error', error.message)
+  }
+}
+
+// 删除文件（同时删除七牛云文件）
+const removeFile = async (index, qiniuKey) => {
+  // 如果文件已上传到七牛云，先删除七牛云文件
+  if (qiniuKey) {
+    try {
+      // 生成签名
+      const signedData = apiSignature.sign({ key: qiniuKey })
+      
+      const response = await fetch('/shop/api/inquiry/delete-attachment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          key: qiniuKey,
+          timestamp: signedData.timestamp,
+          nonce: signedData.nonce,
+          signature: signedData.signature
+        })
+      })
+      
+      const result = await response.json()
+      
+      if (!result.success) {
+        console.error('删除七牛云文件失败:', result.message)
+        // 即使七牛云删除失败，也继续删除本地记录
+      }
+    } catch (error) {
+      console.error('删除七牛云文件异常:', error)
+      // 即使七牛云删除失败，也继续删除本地记录
+    }
+  }
+  
+  // 从列表中移除文件
+  files.value.splice(index, 1)
+  updateModelValue()
+}
+
+// 更新父组件的值
+const updateModelValue = () => {
+  const uploadedFiles = files.value
+    .filter(f => f.uploaded && !f.error)
+    .map(f => ({
+      key: f.key,
+      name: f.name,
+      type: f.type,
+      size: f.size,
+      previewUrl: f.previewUrl
+    }))
+  
+  emit('update:modelValue', uploadedFiles)
+}
+
+// 打开图片预览
+const openImagePreview = (url) => {
+  previewImageUrl.value = url
+  // 阻止body滚动
+  document.body.style.overflow = 'hidden'
+}
+
+// 关闭图片预览
+const closeImagePreview = () => {
+  previewImageUrl.value = ''
+  // 恢复body滚动
+  document.body.style.overflow = ''
+}
+</script>
+
+<style scoped>
+.inquiry-file-upload-container {
+  width: 100%;
+}
+
+/* 上传区域 */
+.upload-drop-zone {
+  border: 2px dashed #d0d7de;
+  border-radius: 8px;
+  padding: 32px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #f6f8fa;
+}
+
+.upload-drop-zone:hover:not(.is-disabled) {
+  border-color: #cb261c;
+  background-color: #fff5f5;
+}
+
+.upload-drop-zone.is-dragging {
+  border-color: #cb261c;
+  background-color: #fff5f5;
+  border-style: solid;
+}
+
+.upload-drop-zone.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-icon-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.upload-icon {
+  width: 48px;
+  height: 48px;
+  color: #57606a;
+}
+
+.upload-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #24292f;
+  margin: 0 0 4px 0;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: #57606a;
+  margin: 0 0 8px 0;
+}
+
+.upload-limit {
+  font-size: 12px;
+  color: #cb261c;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* 文件列表 */
+.file-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-right: -8px;
+}
+
+/* 老浏览器（IE11、搜狗、360）兼容性修复：gap -> margin */
+.file-list {
+  margin-right: -8px;
+}
+
+.file-list > * {
+  margin-right: 8px;
+}
+
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: -12px;
+  padding: 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background-color: #fff;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* 老浏览器（IE11、搜狗、360）兼容性修复：gap -> margin */
+.file-item {
+  margin-right: -12px;
+}
+
+.file-item > * {
+  margin-right: 12px;
+}
+
+
+.file-item:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.file-item.is-uploading {
+  background-color: #f6f8fa;
+}
+
+.file-item.is-error {
+  border-color: #d1242f;
+  background-color: #fff5f5;
+}
+
+.file-icon {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.file-icon.is-image-preview {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.file-icon.is-image-preview:hover {
+  transform: scale(1.05);
+}
+
+.file-icon svg {
+  width: 24px;
+  height: 24px;
+  color: #57606a;
+}
+
+.preview-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #24292f;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font-size: 12px;
+  color: #57606a;
+  margin: 0;
+}
+
+/* 进度条 */
+.file-progress {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: -8px;
+}
+
+/* 老浏览器（IE11、搜狗、360）兼容性修复：gap -> margin */
+.file-progress {
+  margin-right: -8px;
+}
+
+.file-progress > * {
+  margin-right: 8px;
+}
+
+
+.progress-bar {
+  width: 80px;
+  height: 6px;
+  background-color: #f3f4f6;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #cb261c;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #57606a;
+  width: 40px;
+  text-align: right;
+}
+
+/* 状态标记 */
+.file-status {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-status svg {
+  width: 20px;
+  height: 20px;
+}
+
+.file-status.success svg {
+  color: #1a7f37;
+}
+
+.file-status.error svg {
+  color: #d1242f;
+}
+
+/* 删除按钮 */
+.btn-remove {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background-color: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.btn-remove:hover:not(:disabled) {
+  background-color: #fff5f5;
+}
+
+.btn-remove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-remove svg {
+  width: 18px;
+  height: 18px;
+  color: #d1242f;
+}
+
+/* 错误提示 */
+.error-message {
+  position: absolute;
+  bottom: -20px;
+  left: 64px;
+  font-size: 12px;
+  color: #d1242f;
+  margin: 0;
+}
+
+.global-error {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #fff5f5;
+  border: 1px solid #d1242f;
+  border-radius: 6px;
+  color: #d1242f;
+  font-size: 13px;
+}
+
+/* 图片预览弹窗 */
+.image-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.preview-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.btn-close-preview {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.btn-close-preview:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-close-preview svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+</style>

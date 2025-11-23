@@ -1,0 +1,165 @@
+/* 
+ * 浏览器兼容性补丁 - 仅包含必要的全局样式
+ * 用于修复搜狗、360、IE11等老旧浏览器的样式问题
+ * 注意：不要在此文件添加会影响全局布局的样式，避免与 Tailwind CSS 冲突
+ */
+
+/* 1. 统一 button 按钮样式 - 移除浏览器默认背景色 */
+button {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+button::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+/* 2. 统一复选框样式 - 跨浏览器一致性（全局） */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  background-color: #ffffff;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+input[type="checkbox"]:hover {
+  border-color: #cb261c;
+}
+
+input[type="checkbox"]:checked {
+  background-color: #cb261c;
+  border-color: #cb261c;
+}
+
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+}
+
+input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(203, 38, 28, 0.1);
+  -webkit-box-shadow: 0 0 0 3px rgba(203, 38, 28, 0.1);
+  -moz-box-shadow: 0 0 0 3px rgba(203, 38, 28, 0.1);
+}
+
+input[type="checkbox"]:disabled {
+  background-color: #f3f4f6;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 3. 批量操作按钮区域样式 - 全局兼容性修复 */
+/* 左侧全选区域 */
+.select-actions-list {
+  margin-right: -1.25rem;
+}
+
+.select-actions-list > li {
+  margin-right: 1.25rem;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.select-all-item {
+  margin-right: -0.5rem;
+}
+
+.select-all-item > * {
+  margin-right: 0.5rem;
+}
+
+.selected-count-item {
+  margin: 0;
+}
+
+/* 右侧批量操作按钮区域 */
+.batch-actions-list {
+  margin-right: -1.5rem;
+}
+
+.batch-actions-list > li {
+  margin-right: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.batch-action-item {
+  margin: 0;
+}
+
+.action-link-item {
+  margin-right: -0.25rem;
+}
+
+.action-link-item > * {
+  margin-right: 0.25rem;
+}
+
+/* 4. 商品卡片中的复选框和操作按钮 - 全局兼容性修复 */
+.product-checkbox-label {
+  margin-right: -0.5rem;
+}
+
+.product-checkbox-label > * {
+  margin-right: 0.5rem;
+}
+
+.product-actions-list {
+  margin-right: -0.5rem;
+}
+
+.product-actions-list > * {
+  margin-right: 0.5rem;
+}
+
+/* 价格显示区域 */
+.price-display-wrapper {
+  margin-right: -0.5rem;
+}
+
+.price-display-wrapper > * {
+  margin-right: 0.5rem;
+}
+
+/* 区域选择器 */
+.region-selector-wrapper {
+  margin-right: -0.5rem;
+}
+
+.region-selector-wrapper > * {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}

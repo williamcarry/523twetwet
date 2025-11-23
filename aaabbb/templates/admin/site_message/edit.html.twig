@@ -1,0 +1,10 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}编辑站内信{% endblock %}
+
+{% block body %}
+<div {{ vue_component('admin/SiteMessageEdit', {
+    'adminLoginPath': adminLoginPath,
+    'message': message
+}) }}></div>
+{% endblock %}

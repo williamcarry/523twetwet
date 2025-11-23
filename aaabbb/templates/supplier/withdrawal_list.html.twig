@@ -1,0 +1,10 @@
+{% extends 'supplier/base.html.twig' %}
+
+{% block title %}提现申请记录{% endblock %}
+
+{% block content %}
+<div {{ vue_component('supplier/WithdrawalList', {
+    'supplierLoginPath': supplierLoginPath,
+    'autoLoad': true
+}) }}></div>
+{% endblock %}

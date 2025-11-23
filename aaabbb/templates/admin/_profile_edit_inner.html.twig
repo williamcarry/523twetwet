@@ -1,0 +1,8 @@
+<div {{ vue_component('admin/AdminProfileEdit', {
+    'admin': {
+        'username': admin.username,
+        'email': admin.email,
+        'fullName': admin.fullName
+    },
+    'submitUrl': path('admin_profile_edit', {'adminLoginPath': app.request.get('adminLoginPath')})
+}) }}></div>

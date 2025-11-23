@@ -1,0 +1,15 @@
+<div {{ vue_component('admin/MenuCategoryList', {
+    'menuCategories': menuCategories|map(category => {
+        'id': category.id,
+        'title': category.title,
+        'titleEn': category.titleEn,
+        'icon': category.icon,
+        'sortOrder': category.sortOrder,
+        'isActive': category.isActive,
+        'createdAt': category.createdAt|date('Y-m-d H:i:s'),
+        'updatedAt': category.updatedAt|date('Y-m-d H:i:s')
+    }),
+    'currentPage': currentPage,
+    'totalPages': totalPages,
+    'totalCategories': totalCategories
+}) }}></div>

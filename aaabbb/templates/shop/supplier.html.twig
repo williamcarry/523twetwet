@@ -1,0 +1,9 @@
+{% extends 'shop/base.html.twig' %}
+
+{% block title %}供应商入驻{% endblock %}
+
+{% block body %}
+<div {{ vue_component('shop/pages/SupplierPage', {
+    'supplierLoginPath': supplierLoginPath
+}) }}></div>
+{% endblock %}

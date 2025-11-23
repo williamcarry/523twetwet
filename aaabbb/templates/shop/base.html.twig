@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {# 商城样式入口 - 包含在 frontend.js 中 #}
+    {{ encore_entry_link_tags('frontend') }}
+{% endblock %}
+
+{% block javascripts %}
+    {# 商城脚本入口 #}
+    {{ encore_entry_script_tags('frontend') }}
+{% endblock %}
+
+{% block body %}{% endblock %}

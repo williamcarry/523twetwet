@@ -1,0 +1,16 @@
+<div {{ vue_component('admin/MenuSubcategoryList', {
+    'menuSubcategories': menuSubcategories|map(subcategory => {
+        'id': subcategory.id,
+        'categoryId': subcategory.categoryId,
+        'categoryTitle': subcategory.category ? subcategory.category.title : '',
+        'title': subcategory.title,
+        'titleEn': subcategory.titleEn,
+        'sortOrder': subcategory.sortOrder,
+        'isActive': subcategory.isActive,
+        'createdAt': subcategory.createdAt|date('Y-m-d H:i:s'),
+        'updatedAt': subcategory.updatedAt|date('Y-m-d H:i:s')
+    }),
+    'currentPage': currentPage,
+    'totalPages': totalPages,
+    'totalSubcategories': totalSubcategories
+}) }}></div>

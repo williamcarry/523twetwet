@@ -1,0 +1,335 @@
+<template>
+  <div class="store-usage-example">
+    <el-card class="box-card">
+      <template #header>
+        <div class="card-header">
+          <span>Vuex Store 使用示例</span>
+        </div>
+      </template>
+      
+      <div class="content">
+        <!-- 搜索状态展示 -->
+        <el-divider content-position="left">搜索状态</el-divider>
+        <div class="section">
+          <el-input 
+            v-model="localSearchQuery" 
+            @input="handleSearchInput" 
+            placeholder="输入搜索关键词"
+            clearable
+            style="width: 300px; margin-right: 10px;"
+          />
+          <el-button @click="clearSearch" type="warning">清空搜索</el-button>
+          <div class="state-display">
+            <p><strong>当前搜索词:</strong> {{ searchQuery }}</p>
+            <p><strong>搜索状态:</strong> {{ isSearching ? '搜索中...' : '空闲' }}</p>
+            <p><strong>搜索结果数量:</strong> {{ searchResults.length }}</p>
+          </div>
+        </div>
+        
+        <!-- 用户状态展示 -->
+        <el-divider content-position="left">用户状态</el-divider>
+        <div class="section">
+          <div v-if="!isLoggedIn">
+            <el-button @click="simulateLogin" type="primary">模拟登录</el-button>
+          </div>
+          <div v-else>
+            <p><strong>欢迎,</strong> {{ user.name }}!</p>
+            <p><strong>邮箱:</strong> {{ user.email }}</p>
+            <el-button @click="logout" type="danger">退出登录</el-button>
+          </div>
+        </div>
+        
+        <!-- 购物车状态展示 -->
+        <el-divider content-position="left">购物车状态</el-divider>
+        <div class="section">
+          <div class="cart-summary">
+            <p><strong>商品数量:</strong> {{ cartItemCount }}</p>
+            <p><strong>总价:</strong> ¥{{ cartTotal.toFixed(2) }}</p>
+          </div>
+          
+          <div class="cart-actions">
+            <el-button @click="addSampleItem" type="success">添加示例商品</el-button>
+            <el-button @click="clearCart" type="warning">清空购物车</el-button>
+          </div>
+          
+          <div v-if="cartItems.length > 0" class="cart-items">
+            <el-table :data="cartItems" style="width: 100%">
+              <el-table-column prop="name" label="商品名称" width="180"></el-table-column>
+              <el-table-column prop="price" label="单价" width="120">
+                <template #default="scope">
+                  ¥{{ scope.row.price.toFixed(2) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="quantity" label="数量" width="120"></el-table-column>
+              <el-table-column label="小计" width="120">
+                <template #default="scope">
+                  ¥{{ (scope.row.price * scope.row.quantity).toFixed(2) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="120">
+                <template #default="scope">
+                  <el-button @click="removeFromCart(scope.row.id)" type="danger" size="small">移除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+          <div v-else>
+            <p>购物车为空</p>
+          </div>
+        </div>
+        
+        <!-- UI状态展示 -->
+        <el-divider content-position="left">UI状态</el-divider>
+        <div class="section">
+          <div class="ui-actions">
+            <el-button @click="toggleSidebar" :type="isSidebarOpen ? 'danger' : 'primary'">
+              {{ isSidebarOpen ? '关闭' : '打开' }} 侧边栏
+            </el-button>
+            <el-button @click="openSampleModal" type="success">打开模态框</el-button>
+            <el-button @click="closeModal" type="warning">关闭模态框</el-button>
+          </div>
+          
+          <div class="state-display">
+            <p><strong>加载状态:</strong> {{ isLoading ? '加载中...' : '空闲' }}</p>
+            <p><strong>侧边栏状态:</strong> {{ isSidebarOpen ? '打开' : '关闭' }}</p>
+            <p><strong>模态框状态:</strong> {{ isModalOpen ? '打开' : '关闭' }}</p>
+          </div>
+        </div>
+        
+        <!-- 帮助中心数据展示 -->
+        <el-divider content-position="left">帮助中心数据</el-divider>
+        <div class="section">
+          <p><strong>FAQ数据条目:</strong> {{ faqData.length }}</p>
+          <p><strong>操作指南数据条目:</strong> {{ operationGuideFaqData.length }}</p>
+        </div>
+      </div>
+    </el-card>
+    
+    <!-- 模态框示例 -->
+    <el-dialog v-model="isModalOpen" title="Vuex Store 模态框示例" width="30%">
+      <span>{{ modalContent }}</span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="closeModal">关闭</el-button>
+        </span>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { computed, ref, onMounted } from 'vue';
+import { useStore } from 'vuex';
+
+export default {
+  name: 'StoreUsageExample',
+  setup() {
+    const store = useStore();
+    
+    // 本地状态
+    const localSearchQuery = ref('');
+    
+    // 从store获取状态 (使用computed确保响应性)
+    const searchQuery = computed(() => store.getters.searchQuery);
+    const searchResults = computed(() => store.getters.searchResults);
+    const isSearching = computed(() => store.getters.isSearching);
+    const user = computed(() => store.getters.user);
+    const isLoggedIn = computed(() => store.getters.isLoggedIn);
+    const cartItems = computed(() => store.getters.cartItems);
+    const cartTotal = computed(() => store.getters.cartTotal);
+    const cartItemCount = computed(() => store.getters.cartItemCount);
+    const isLoading = computed(() => store.getters.isLoading);
+    const isSidebarOpen = computed(() => store.getters.isSidebarOpen);
+    const isModalOpen = computed(() => store.getters.isModalOpen);
+    const modalContent = computed(() => store.getters.modalContent);
+    const faqData = computed(() => store.getters.allFaqData);
+    const operationGuideFaqData = computed(() => store.getters.allOperationGuideFaqData);
+    
+    // 处理搜索输入
+    const handleSearchInput = () => {
+      store.dispatch('updateSearchQuery', localSearchQuery.value);
+      
+      // 模拟搜索过程
+      store.dispatch('setSearchStatus', true);
+      
+      // 模拟搜索结果
+      setTimeout(() => {
+        const mockResults = localSearchQuery.value ? [
+          { id: 1, title: `搜索结果1: ${localSearchQuery.value}`, content: '这是模拟的搜索结果内容...' },
+          { id: 2, title: `搜索结果2: ${localSearchQuery.value}`, content: '这是另一个模拟的搜索结果内容...' }
+        ] : [];
+        
+        store.dispatch('updateSearchResults', mockResults);
+        store.dispatch('setSearchStatus', false);
+      }, 500);
+    };
+    
+    // 清空搜索
+    const clearSearch = () => {
+      localSearchQuery.value = '';
+      store.dispatch('updateSearchQuery', '');
+      store.dispatch('updateSearchResults', []);
+    };
+    
+    // 模拟登录
+    const simulateLogin = () => {
+      store.dispatch('login', {
+        id: 1,
+        name: '示例用户',
+        email: 'user@example.com',
+        avatar: 'https://via.placeholder.com/50'
+      });
+    };
+    
+    // 退出登录
+    const logout = () => {
+      store.dispatch('logout');
+    };
+    
+    // 添加示例商品到购物车
+    const addSampleItem = () => {
+      const sampleItems = [
+        { id: 1, name: '无线蓝牙耳机', price: 299.99 },
+        { id: 2, name: '智能手表', price: 1299.99 },
+        { id: 3, name: '移动电源', price: 199.99 },
+        { id: 4, name: '无线充电器', price: 99.99 }
+      ];
+      
+      const randomItem = sampleItems[Math.floor(Math.random() * sampleItems.length)];
+      store.dispatch('addToCart', { ...randomItem, quantity: 1 });
+    };
+    
+    // 从购物车移除商品
+    const removeFromCart = (itemId) => {
+      store.dispatch('removeFromCart', itemId);
+    };
+    
+    // 清空购物车
+    const clearCart = () => {
+      store.dispatch('clearCart');
+    };
+    
+    // 切换侧边栏
+    const toggleSidebar = () => {
+      store.dispatch('toggleSidebar');
+    };
+    
+    // 打开示例模态框
+    const openSampleModal = () => {
+      store.dispatch('openModal', '这是一个使用Vuex Store管理状态的模态框示例。您可以在这里显示任何内容。');
+    };
+    
+    // 关闭模态框
+    const closeModal = () => {
+      store.dispatch('closeModal');
+    };
+    
+    // 设置加载状态
+    const setLoading = (loading) => {
+      store.dispatch('setLoading', loading);
+    };
+    
+    // 组件挂载时的初始化
+    onMounted(() => {
+      console.log('[StoreUsageExample] 组件已挂载');
+      
+      // 初始化一些示例数据
+      store.dispatch('updateSearchResults', [
+        { id: 1, title: '示例搜索结果1', content: '这是示例内容...' },
+        { id: 2, title: '示例搜索结果2', content: '这是另一个示例内容...' }
+      ]);
+    });
+    
+    return {
+      // 状态
+      localSearchQuery,
+      searchQuery,
+      searchResults,
+      isSearching,
+      user,
+      isLoggedIn,
+      cartItems,
+      cartTotal,
+      cartItemCount,
+      isLoading,
+      isSidebarOpen,
+      isModalOpen,
+      modalContent,
+      faqData,
+      operationGuideFaqData,
+      
+      // 方法
+      handleSearchInput,
+      clearSearch,
+      simulateLogin,
+      logout,
+      addSampleItem,
+      removeFromCart,
+      clearCart,
+      toggleSidebar,
+      openSampleModal,
+      closeModal,
+      setLoading
+    };
+  }
+};
+</script>
+
+<style scoped>
+.store-usage-example {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.box-card {
+  width: 100%;
+}
+
+.card-header {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.content {
+  padding: 20px 0;
+}
+
+.section {
+  margin-bottom: 30px;
+}
+
+.state-display {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.state-display p {
+  margin: 5px 0;
+}
+
+.cart-summary {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 15px;
+}
+
+.cart-summary p {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.cart-actions {
+  margin-bottom: 20px;
+}
+
+.ui-actions {
+  margin-bottom: 20px;
+}
+
+.dialog-footer {
+  text-align: right;
+}
+</style>

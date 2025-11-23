@@ -1,0 +1,9 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}添加公告消息{% endblock %}
+
+{% block body %}
+<div {{ vue_component('admin/SiteMessageCreate', {
+    'adminLoginPath': adminLoginPath
+}) }}></div>
+{% endblock %}

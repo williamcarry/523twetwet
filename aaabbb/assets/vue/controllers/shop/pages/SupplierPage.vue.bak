@@ -1,0 +1,2120 @@
+<template>
+  <div class="supplier-wrapper">
+    <!-- Header -->
+    <header class="supplier-header">
+      <div class="header-container">
+        <div class="header-logo">
+          <a href="/">
+            <img src="/frondend/images/logo.png" :alt="t('headerLogoAlt')" />
+            <span>{{ t('headerLogoAlt') }}</span>
+          </a>
+        </div>
+        <div class="header-actions">
+          <a :href="supplierLoginUrl" target="_blank" class="header-link">{{ t('headerLogin') }}</a>
+          <span class="header-divider">|</span>
+          <a href="/register" class="header-btn-primary">{{ t('headerRegister') }}</a>
+        </div>
+      </div>
+    </header>
+    <div class="supplier-main" style="  margin-bottom: -25px;">
+      <!-- Hero Banner Section -->
+      <section class="hero-carousel">
+        <div class="carousel-slide">
+          <div class="slide-content">
+            <div class="slide-left">
+              <h1 class="slide-title">{{ t('slide1Title') }}</h1>
+              <p class="slide-subtitle">{{ t('slide1Subtitle') }}</p>
+              <a href="/register" class="slide-cta">{{ t('slide1Cta') }}</a>
+            </div>
+            <div class="slide-right">
+              <img src="/frondend/images/SupplierPage/banner1.png" :alt="t('slide1Cta')" />
+            </div>
+          </div>
+        </div>
+
+        <div class="carousel-slide">
+          <div class="slide-content">
+            <div class="slide-left">
+              <h1 class="slide-title">{{ t('slide2Title') }}</h1>
+              <p class="slide-subtitle">{{ t('slide2Subtitle') }}</p>
+              <a href="/register" class="slide-cta">{{ t('slide2Cta') }}</a>
+            </div>
+            <div class="slide-right">
+              <img src="/frondend/images/SupplierPage/banner2.png" :alt="t('slide2Cta')" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Advantages Section -->
+      <section class="advantages">
+        <div class="container">
+          <h2 class="section-title-center">{{ t('advantagesTitle') }}</h2>
+          <p class="section-subtitle">{{ t('advantagesSubtitle') }}</p>
+
+          <ul class="advantages-list">
+            <li class="advantage-item">
+              <div class="advantage-left">
+                <div class="advantage-number">01</div>
+                <h3 class="advantage-title" v-html="t('advantage1Title')"></h3>
+                <p class="advantage-desc">{{ t('advantage1Desc') }}</p>
+              </div>
+              <div class="advantage-right">
+                <img src="/frondend/images/SupplierPage/advantage1.png" alt="渠道覆盖广" />
+              </div>
+            </li>
+
+            <li class="advantage-item">
+              <div class="advantage-left">
+                <div class="advantage-number">02</div>
+                <h3 class="advantage-title" v-html="t('advantage2Title')"></h3>
+                <p class="advantage-desc">{{ t('advantage2Desc') }}</p>
+              </div>
+              <div class="advantage-right">
+                <img src="/frondend/images/SupplierPage/advantage2.png" alt="运营高效" />
+              </div>
+            </li>
+
+            <li class="advantage-item">
+              <div class="advantage-left">
+                <div class="advantage-number">03</div>
+                <h3 class="advantage-title" v-html="t('advantage3Title')"></h3>
+                <p class="advantage-desc">{{ t('advantage3Desc') }}</p>
+              </div>
+              <div class="advantage-right">
+                <img src="/frondend/images/SupplierPage/advantage3.png" alt="物流保障" />
+              </div>
+            </li>
+
+            <li class="advantage-item">
+              <div class="advantage-left">
+                <div class="advantage-number">04</div>
+                <h3 class="advantage-title" v-html="t('advantage4Title')"></h3>
+                <p class="advantage-desc">{{ t('advantage4Desc') }}</p>
+              </div>
+              <div class="advantage-right">
+                <img src="/frondend/images/SupplierPage/advantage4.png" alt="专业支持" />
+              </div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Qualification Requirements Section -->
+      <section class="qualification">
+        <div class="container">
+          <h2 class="section-title">{{ t('qualificationTitle') }}</h2>
+          <div class="qualification-content">
+            <div class="qualification-image">
+              <img src="/frondend/images/SupplierPage/partner.png" :alt="t('qualificationTitle')" />
+            </div>
+            <div class="qualification-text">
+              <div class="recruitment-badge">{{ t('qualificationBadge') }}</div>
+              <ul class="requirements-list">
+                <li>{{ t('qualificationReq1') }}</li>
+                <li>{{ t('qualificationReq2') }}</li>
+                <li>{{ t('qualificationReq3') }}</li>
+                <li>{{ t('qualificationReq4') }}</li>
+                <li>{{ t('qualificationReq5') }}</li>
+                <li>{{ t('qualificationReq6') }}</li>
+                <li>{{ t('qualificationReq7') }}</li>
+                <li>{{ t('qualificationReq8') }}</li>
+                <li>{{ t('qualificationReq9') }}</li>
+              </ul>
+              <button class="qualification-cta" @click="openRegisterModal">{{ t('qualificationCta') }}</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Categories Section -->
+      <section class="categories">
+        <div class="container">
+          <h2 class="section-title-center">{{ t('categoriesTitle') }}</h2>
+          <ul class="categories-grid">
+            <li class="category-item">
+              <img src="/frondend/images/SupplierPage/category1.png"
+                :alt="t('category1')" />
+              <div class="category-title">{{ t('category1') }}</div>
+            </li>
+            <li class="category-item">
+              <img src="/frondend/images/SupplierPage/category2.png"
+                :alt="t('category2')" />
+              <div class="category-title">{{ t('category2') }}</div>
+            </li>
+            <li class="category-item">
+              <img src="/frondend/images/SupplierPage/category3.png"
+                :alt="t('category3')" />
+              <div class="category-title">{{ t('category3') }}</div>
+            </li>
+            <li class="category-item">
+              <img src="/frondend/images/SupplierPage/category4.png"
+                :alt="t('category4')" />
+              <div class="category-title">{{ t('category4') }}</div>
+            </li>
+            <li class="category-item">
+              <img src="/frondend/images/SupplierPage/category5.png"
+                :alt="t('category5')" />
+              <div class="category-title">{{ t('category5') }}</div>
+            </li>
+            <li class="category-item">
+              <img src="/frondend/images/SupplierPage/category6.png"
+                :alt="t('category6')" />
+              <div class="category-title">{{ t('category6') }}</div>
+            </li>
+            <li class="category-item">
+              <img src="/frondend/images/SupplierPage/category7.png"
+                :alt="t('category7')" />
+              <div class="category-title">{{ t('category7') }}</div>
+            </li>
+            <li class="category-item">
+              <img src="/frondend/images/SupplierPage/category8.png"
+                :alt="t('category8')" />
+              <div class="category-title">{{ t('category8') }}</div>
+            </li>
+            <li class="category-item">
+              <img src="/frondend/images/SupplierPage/category9.png"
+                :alt="t('category9')" />
+              <div class="category-title">{{ t('category9') }}</div>
+            </li>
+            <li class="category-item">
+              <img src="/frondend/images/SupplierPage/category10.png"
+                :alt="t('category10')" />
+              <div class="category-title">{{ t('category10') }}</div>
+            </li>
+            <li class="category-item">
+              <img src="/frondend/images/SupplierPage/category11.png"
+                :alt="t('category11')" />
+              <div class="category-title">{{ t('category11') }}</div>
+            </li>
+            <li class="category-item">
+              <img src="/frondend/images/SupplierPage/category12.png"
+                :alt="t('category12')" />
+              <div class="category-title">{{ t('category12') }}</div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Join CTA Section -->
+      <section class="join-cta-section">
+        <div class="container">
+          <h2 class="join-title">{{ t('joinTitle') }}</h2>
+          <button class="join-cta-button" @click="openRegisterModal">{{ t('joinCta') }}</button>
+        </div>
+      </section>
+    </div>
+    
+    <!-- Register Modal -->
+    <div v-if="showRegisterModal" class="supplier-modal-overlay" @mousedown="handleOverlayMouseDown" @click="handleOverlayClick" role="dialog">
+      <div class="modal-backdrop" @mousedown="handleBackdropMouseDown" @click="handleBackdropClick"></div>
+      <div class="modal-container">
+        <button type="button" aria-label="Close" class="modal-close" @click="closeRegisterModal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        
+        <div class="modal-content">
+          <!-- Compact Three-Step Header -->
+          <ul class="modal-steps">
+            <li class="modal-step">
+              <svg xmlns="http://www.w3.org/2000/svg" class="modal-step-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <h3 class="modal-step-title">{{ t('modalStep1Title') }}</h3>
+              <p class="modal-step-desc">{{ t('modalStep1Desc') }}</p>
+            </li>
+            <li class="modal-step">
+              <svg xmlns="http://www.w3.org/2000/svg" class="modal-step-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              <h3 class="modal-step-title">{{ t('modalStep2Title') }}</h3>
+              <p class="modal-step-desc">{{ t('modalStep2Desc') }}</p>
+            </li>
+            <li class="modal-step">
+              <svg xmlns="http://www.w3.org/2000/svg" class="modal-step-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+              <h3 class="modal-step-title">{{ t('modalStep3Title') }}</h3>
+            </li>
+          </ul>
+
+          <h2 class="modal-title">{{ t('modalMainTitle') }}</h2>
+
+          <form class="modal-form" @submit.prevent="submitRegister">
+            <div class="form-group">
+              <label for="username" class="form-label">{{ t('formUsername') }} <span class="form-required">*</span></label>
+              <input id="username" v-model="form.username" :placeholder="t('formUsernamePlaceholder')" type="text" maxlength="128" class="form-input" />
+            </div>
+
+            <div class="form-group">
+              <label for="password" class="form-label">{{ t('formPassword') }} <span class="form-required">*</span></label>
+              <input id="password" v-model="form.password" :placeholder="t('formPasswordPlaceholder')" type="password" maxlength="128" class="form-input" />
+              <p class="form-hint">{{ t('formPasswordHint') }}</p>
+            </div>
+
+            <div class="form-group">
+              <label for="email" class="form-label">{{ t('formEmail') }} <span class="form-required">*</span></label>
+              <input id="email" v-model="form.email" :placeholder="t('formEmailPlaceholder')" type="email" maxlength="256" class="form-input" />
+            </div>
+
+            <div class="form-group">
+              <label for="contact_person" class="form-label">{{ t('formContactPerson') }} <span class="form-required">*</span></label>
+              <input id="contact_person" v-model="form.contact_person" :placeholder="t('formContactPersonPlaceholder')" type="text" maxlength="128" class="form-input" />
+            </div>
+
+            <div class="form-group">
+              <label for="contact_phone" class="form-label">{{ t('formContactPhone') }} / {{ t('formSmsCode') }} <span class="form-required">*</span></label>
+              <div class="form-input-group-inline">
+                <input 
+                  id="contact_phone" 
+                  v-model="form.contact_phone" 
+                  :placeholder="t('formContactPhonePlaceholder')" 
+                  type="text" 
+                  maxlength="11" 
+                  class="form-input form-input-phone" 
+                />
+                <input 
+                  id="sms_code" 
+                  v-model="form.sms_code" 
+                  :placeholder="t('formSmsCodePlaceholder')" 
+                  type="text" 
+                  maxlength="6" 
+                  class="form-input form-input-code" 
+                />
+                <button 
+                  type="button" 
+                  class="sms-code-btn" 
+                  :disabled="smsCodeSending || smsCodeCountdown > 0"
+                  @click="sendSmsCode"
+                >
+                  {{ smsCodeCountdown > 0 ? `${smsCodeCountdown}s` : t('formSendCode') }}
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">{{ t('formSupplierType') }} <span class="form-required">*</span></label>
+              <div class="form-radios">
+                <label class="radio-label">
+                  <input type="radio" value="individual" v-model="form.supplier_type" class="radio-input" />
+                  <span>{{ t('formSupplierTypeIndividual') }}</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" value="company" v-model="form.supplier_type" class="radio-input" />
+                  <span>{{ t('formSupplierTypeCompany') }}</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Company-specific fields (shown only when supplier_type is 'company') -->
+            <template v-if="form.supplier_type === 'company'">
+              <div class="form-section-divider"></div>
+
+              <div class="form-group">
+                <label class="form-label">{{ t('formHasCrossBorderExp') }} <span class="form-required">*</span></label>
+                <div class="form-radios">
+                  <label class="radio-label">
+                    <input type="radio" :value="1" v-model.number="form.has_cross_border_experience" class="radio-input" />
+                    <span>{{ t('formYes') }}</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" :value="0" v-model.number="form.has_cross_border_experience" class="radio-input" />
+                    <span>{{ t('formNo') }}</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="company_name" class="form-label">{{ t('formCompanyName') }} <span class="form-required">*</span></label>
+                <input id="company_name" v-model="form.company_name" :placeholder="t('formCompanyNamePlaceholder')" type="text" maxlength="128" class="form-input" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">{{ t('formCompanyType') }} <span class="form-required">*</span></label>
+                <div class="form-radios">
+                  <label class="radio-label">
+                    <input type="radio" value="factory" v-model="form.company_type" class="radio-input" />
+                    <span>{{ t('formCompanyTypeFactory') }}</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" value="trader" v-model="form.company_type" class="radio-input" />
+                    <span>{{ t('formCompanyTypeTrader') }}</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" value="factory_trader" v-model="form.company_type" class="radio-input" />
+                    <span>{{ t('formCompanyTypeFactoryTrader') }}</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="main_category" class="form-label">{{ t('formMainCategory') }} <span class="form-required">*</span></label>
+                <textarea id="main_category" v-model="form.main_category" :placeholder="t('formMainCategoryPlaceholder')" class="form-textarea" rows="3"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="annual_sales_volume" class="form-label">{{ t('formAnnualSalesVolume') }} <span class="form-required">*</span></label>
+                <input id="annual_sales_volume" v-model.number="form.annual_sales_volume" :placeholder="t('formAnnualSalesVolumePlaceholder')" type="number" class="form-input" />
+              </div>
+            </template>
+
+            <div class="form-submit">
+              <button type="submit" class="btn-submit" :disabled="isSubmitting">
+                <span v-if="isSubmitting" class="btn-loading"></span>
+                {{ isSubmitting ? (currentLang === 'zh-CN' ? '正在提交...' : 'Submitting...') : t('formSubmit') }}
+              </button>
+              <p class="form-note">{{ t('formHasAccount') }}<a :href="supplierLoginUrl" target="_blank" class="form-link">{{ t('formLogin') }}</a></p>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal-backdrop-bottom"></div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-col footer-logo-col">
+            <div class="footer-logo">
+              <img src="/frondend/images/logo.png"  />
+            </div>
+            <div class="footer-consultation">
+              <div class="consultation-item">
+                <img src="/frondend/images/SupplierPage/hkg845845hdfh.png" :alt="t('footerIntroQr')" />
+                <span>{{ t('footerIntroQr') }}</span>
+              </div>
+              <div class="consultation-item">
+                <img src="/frondend/images/SupplierPage/fgj5dhdh5757.png" :alt="t('footerAccQr')" />
+                <span>{{ t('footerAccQr') }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer-col">
+            <h4 class="footer-title">{{ t('footerContactTitle') }}</h4>
+            <p class="footer-text">{{ contactPersonResource?.title || '' }}</p>
+            <p class="footer-text">{{ phoneResource?.title || '' }}</p>
+            <p class="footer-text">{{ emailResource?.title || '' }}</p>
+            <p class="footer-text">{{ workTimeResource?.title || '' }}</p>
+          </div>
+
+          <div class="footer-col">
+            <h4 class="footer-title">{{ t('footerLinksTitle') }}</h4>
+            <ul class="footer-links">
+              <li><a href="/help-center">{{ t('footerHelpCenter') }}</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>{{ copyrightResource?.title || '' }} | <a href="#">{{ webicpResource?.title || '' }}</a></p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Floating Action Panel -->
+    <div class="floating-panel">
+      <div class="floating-item floating-consult" @click="showConsultQR = !showConsultQR">
+        <span>{{ t('floatingConsult') }}</span>
+        <div v-if="showConsultQR" class="qr-popup">
+          <img src="/frondend/images/SupplierPage/fgj5dhdh5757.png" :alt="t('floatingConsult')" />
+        </div>
+      </div>
+      <div class="floating-item floating-join" @click="openRegisterModal">
+        <span>{{ t('floatingJoin') }}</span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
+import { ElMessage } from 'element-plus'
+import encryptionService from '../data/encryption-service.js'
+
+// 接收从后端传递的供应商登录路径
+const props = defineProps({
+  supplierLoginPath: {
+    type: String,
+    required: true
+  }
+})
+
+const showConsultQR = ref(false)
+const showRegisterModal = ref(false)
+
+// 用于防止拖拽选择文字时关闭弹窗
+let overlayMouseDownTarget = null
+let backdropMouseDownTarget = null
+
+// 页面翻译数据
+const translations = ref({})
+
+// 当前语言
+const currentLang = ref('zh-CN')
+
+// 计算供应商登录URL
+const supplierLoginUrl = computed(() => {
+  return `/supplier${props.supplierLoginPath}/login`
+})
+
+// 表单数据
+const form = ref({
+  username: '',
+  password: '',
+  email: '',
+  contact_person: '',
+  contact_phone: '',
+  sms_code: '',  // 短信验证码
+  supplier_type: 'individual',
+  has_cross_border_experience: 0,
+  company_name: '',
+  company_type: 'factory',
+  main_category: '',
+  annual_sales_volume: '',
+})
+
+// 短信验证码相关状态
+const smsCodeSending = ref(false)  // 是否正在发送验证码
+const smsCodeCountdown = ref(0)    // 倒计时秒数
+let countdownTimer = null          // 倒计时定时器
+const isSubmitting = ref(false)    // 是否正在提交注册
+
+// 加载翻译文件
+const loadTranslations = async () => {
+  try {
+    const response = await fetch('/frondend/lang/SupplierPage.json')
+    const data = await response.json()
+    translations.value = data
+  } catch (error) {
+    console.error('Failed to load translations:', error)
+  }
+}
+
+// 翻译函数 - 直接从页面特定的JSON文件读取
+const t = (key) => {
+  // 获取当前语言，优先从localStorage获取，否则使用默认值
+  const lang = localStorage.getItem('app.lang') || currentLang.value
+  
+  // 从页面特定的翻译文件中获取翻译
+  if (translations.value[lang] && translations.value[lang][key]) {
+    return translations.value[lang][key]
+  }
+  
+  // 如果没有找到翻译，返回键名
+  return key
+}
+
+// 监听语言变化事件
+const handleLangChange = (event) => {
+  if (event.detail && event.detail.lang) {
+    currentLang.value = event.detail.lang
+  }
+  // 重新加载翻译以确保语言切换时更新
+  loadTranslations()
+}
+
+// 从window对象获取store实例
+const store = window.vueStore;
+
+// 获取供应商介绍资源
+const supplierIntroResources = computed(() => {
+  // 确保store和getters存在
+  if (store && store.getters) {
+    return store.getters.supplierIntroResources || [];
+  }
+  return [];
+});
+
+// 了解赛盈二维码图片资源 (position为supplierIntro, positiontype为supplierIntroqr, type为image)
+const introQrImageResource = computed(() => {
+  if (Array.isArray(supplierIntroResources.value) && supplierIntroResources.value.length > 0) {
+    const resource = supplierIntroResources.value.find(resource =>
+      resource.position === 'supplierIntro' &&
+      resource.positiontype === 'supplierIntroqr' &&
+      resource.type === 'image'
+    );
+    return resource;
+  }
+  return null;
+});
+
+// 入驻咨询二维码图片资源 (position为supplierIntro, positiontype为supplierIntroaccqr, type为image)
+const accQrImageResource = computed(() => {
+  if (Array.isArray(supplierIntroResources.value) && supplierIntroResources.value.length > 0) {
+    const resource = supplierIntroResources.value.find(resource =>
+      resource.position === 'supplierIntro' &&
+      resource.positiontype === 'supplierIntroaccqr' &&
+      resource.type === 'image'
+    );
+    return resource;
+  }
+  return null;
+});
+
+// 联系人信息 (position为supplierIntro, positiontype为supplierIntroContract, type为text)
+const contactPersonResource = computed(() => {
+  if (Array.isArray(supplierIntroResources.value) && supplierIntroResources.value.length > 0) {
+    const resource = supplierIntroResources.value.find(resource =>
+      resource.position === 'supplierIntro' &&
+      resource.positiontype === 'supplierIntroContract' &&
+      resource.type === 'text'
+    );
+    return resource;
+  }
+  return null;
+});
+
+// 电话信息 (position为supplierIntro, positiontype为supplierIntroPhone, type为text)
+const phoneResource = computed(() => {
+  if (Array.isArray(supplierIntroResources.value) && supplierIntroResources.value.length > 0) {
+    const resource = supplierIntroResources.value.find(resource =>
+      resource.position === 'supplierIntro' &&
+      resource.positiontype === 'supplierIntroPhone' &&
+      resource.type === 'text'
+    );
+    return resource;
+  }
+  return null;
+});
+
+// 邮箱信息 (position为supplierIntro, positiontype为supplierIntroEmail, type为text)
+const emailResource = computed(() => {
+  if (Array.isArray(supplierIntroResources.value) && supplierIntroResources.value.length > 0) {
+    const resource = supplierIntroResources.value.find(resource =>
+      resource.position === 'supplierIntro' &&
+      resource.positiontype === 'supplierIntroEmail' &&
+      resource.type === 'text'
+    );
+    return resource;
+  }
+  return null;
+});
+
+// 工作时间信息 (position为supplierIntro, positiontype为supplierIntroWorkTime, type为text)
+const workTimeResource = computed(() => {
+  if (Array.isArray(supplierIntroResources.value) && supplierIntroResources.value.length > 0) {
+    const resource = supplierIntroResources.value.find(resource =>
+      resource.position === 'supplierIntro' &&
+      resource.positiontype === 'supplierIntroWorkTime' &&
+      resource.type === 'text'
+    );
+    return resource;
+  }
+  return null;
+});
+
+// 版权信息资源 (position为copyright, positiontype为copyright)
+const copyrightResource = computed(() => {
+  // 从store获取所有公共资源，查找position为copyright且positiontype为copyright的资源
+  if (store && store.getters) {
+    const allResources = [
+      ...(store.getters.headerResources || []),
+      ...(store.getters.footerResources || []),
+      ...(store.getters.supplierIntroResources || []),
+      ...(store.getters.copyrightResources || []),
+      ...(store.getters.webicpResources || [])
+    ];
+
+    const resource = allResources.find(resource =>
+      resource.position === 'copyright' &&
+      resource.positiontype === 'copyright'
+    );
+
+    return resource;
+  }
+  return null;
+});
+
+// 网站备案信息资源 (position为webicp, positiontype为webicp)
+const webicpResource = computed(() => {
+  // 从store获取所有公共资源，查找position为webicp且positiontype为webicp的资源
+  if (store && store.getters) {
+    const allResources = [
+      ...(store.getters.headerResources || []),
+      ...(store.getters.footerResources || []),
+      ...(store.getters.supplierIntroResources || []),
+      ...(store.getters.copyrightResources || []),
+      ...(store.getters.webicpResources || [])
+    ];
+
+    const resource = allResources.find(resource =>
+      resource.position === 'webicp' &&
+      resource.positiontype === 'webicp'
+    );
+
+    return resource;
+  }
+  return null;
+});
+
+// 获取签名图片URL
+const getSignedImageUrl = (imageField) => {
+  if (!imageField) return ''
+
+  // 如果是对象格式 {key, url, description}
+  if (typeof imageField === 'object') {
+    // 优先使用url字段（后端返回的签名URL）
+    if (imageField.url) {
+      return imageField.url
+    }
+    // 如果只有key字段
+    if (imageField.key) {
+      return imageField.key
+    }
+    return ''
+  }
+
+  // 如果是字符串（直接就是URL或key）
+  if (typeof imageField === 'string') {
+    return imageField
+  }
+
+  return ''
+}
+
+const openRegisterModal = () => {
+  console.log('[SupplierPage] openRegisterModal called')
+  showRegisterModal.value = true
+  try { document.documentElement.setAttribute('data-supplier-modal', 'open') } catch (e) { }
+}
+
+const closeRegisterModal = () => {
+  console.log('[SupplierPage] closeRegisterModal called')
+  showRegisterModal.value = false
+  // 清除倒计时
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+    countdownTimer = null
+  }
+  smsCodeCountdown.value = 0
+  // 重置鼠标追踪变量
+  overlayMouseDownTarget = null
+  backdropMouseDownTarget = null
+  try { document.documentElement.removeAttribute('data-supplier-modal') } catch (e) { }
+}
+
+// 处理 overlay 的 mousedown 事件，记录按下时的目标
+const handleOverlayMouseDown = (e) => {
+  overlayMouseDownTarget = e.target
+}
+
+// 处理 overlay 的 click 事件，只有在同一元素上按下和释放时才关闭
+const handleOverlayClick = (e) => {
+  // 只有当 mousedown 和 click 都发生在 overlay 自身（不是子元素）时才关闭
+  if (e.target === e.currentTarget && overlayMouseDownTarget === e.currentTarget) {
+    closeRegisterModal()
+  }
+  overlayMouseDownTarget = null
+}
+
+// 处理 backdrop 的 mousedown 事件
+const handleBackdropMouseDown = (e) => {
+  backdropMouseDownTarget = e.target
+}
+
+// 处理 backdrop 的 click 事件
+const handleBackdropClick = (e) => {
+  // 只有当 mousedown 和 click 都发生在 backdrop 上时才关闭
+  if (backdropMouseDownTarget === e.target) {
+    closeRegisterModal()
+  }
+  backdropMouseDownTarget = null
+}
+
+// 发送短信验证码
+const sendSmsCode = async () => {
+  // 验证手机号
+  if (!form.value.contact_phone) {
+    ElMessage.warning(t('formContactPhone') + ' 不能为空')
+    return
+  }
+  
+  // 验证手机号格式
+  if (!/^1[3-9]\d{9}$/.test(form.value.contact_phone)) {
+    ElMessage.warning('手机号格式不正确')
+    return
+  }
+  
+  smsCodeSending.value = true
+  
+  try {
+    const response = await fetch('/api/supplier/auth/send-sms-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        phone: form.value.contact_phone
+      })
+    })
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      ElMessage.success(currentLang.value === 'en' ? result.messageEn : result.message)
+      // 启动倒计时（60秒）
+      smsCodeCountdown.value = 60
+      countdownTimer = setInterval(() => {
+        smsCodeCountdown.value--
+        if (smsCodeCountdown.value <= 0) {
+          clearInterval(countdownTimer)
+          countdownTimer = null
+        }
+      }, 1000)
+    } else {
+      // 显示详细的错误信息
+      const errorMsg = currentLang.value === 'en' ? result.messageEn : result.message
+      ElMessage.error({
+        message: errorMsg,
+        duration: 5000,  // 显示5秒，让用户有时间看到完整错误信息
+        showClose: true
+      })
+      // 同时在控制台输出详细信息
+      console.error('短信发送失败:', result)
+    }
+  } catch (error) {
+    console.error('发送短信失败:', error)
+    ElMessage.error('发送失败，请稍后重试')
+  } finally {
+    smsCodeSending.value = false
+  }
+}
+
+const submitRegister = async () => {
+  // 验证必填字段
+  const commonRequired = [
+    { k: 'username', name: t('formUsername') },
+    { k: 'password', name: t('formPassword') },
+    { k: 'email', name: t('formEmail') },
+    { k: 'contact_person', name: t('formContactPerson') },
+    { k: 'contact_phone', name: t('formContactPhone') },
+    { k: 'sms_code', name: t('formSmsCode') },
+    { k: 'supplier_type', name: t('formSupplierType') },
+  ]
+
+  for (const r of commonRequired) {
+    if (!form.value[r.k]) {
+      ElMessage.warning(r.name + ' 为必填项')
+      return
+    }
+  }
+
+  // 验证密码长度（至少8位）
+  if (form.value.password.length < 8) {
+    ElMessage.warning(t('formPasswordHint'))
+    return
+  }
+
+  // 验证公司信息（如果是公司供应商）
+  if (form.value.supplier_type === 'company') {
+    const companyRequired = [
+      { k: 'company_name', name: t('formCompanyName') },
+      { k: 'company_type', name: t('formCompanyType') },
+      { k: 'main_category', name: t('formMainCategory') },
+      { k: 'annual_sales_volume', name: t('formAnnualSalesVolume') },
+    ]
+    for (const r of companyRequired) {
+      if (!form.value[r.k]) {
+        ElMessage.warning(r.name + ' 为必填项')
+        return
+      }
+    }
+  }
+
+  // 提交注册
+  if (isSubmitting.value) {
+    return
+  }
+  
+  isSubmitting.value = true
+  
+  try {
+    // 准备注册数据，加密整个对象
+    const registerData = encryptionService.encryptObject(form.value)
+    
+    const response = await fetch('/api/supplier/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(registerData)
+    })
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      ElMessage.success({
+        message: currentLang.value === 'en' ? result.messageEn : result.message,
+        duration: 5000,
+        showClose: true
+      })
+      showRegisterModal.value = false
+      // 清空表单
+      form.value = {
+        username: '',
+        password: '',
+        email: '',
+        contact_person: '',
+        contact_phone: '',
+        sms_code: '',
+        supplier_type: 'individual',
+        has_cross_border_experience: 0,
+        company_name: '',
+        company_type: 'factory',
+        main_category: '',
+        annual_sales_volume: '',
+      }
+    } else {
+      ElMessage.error({
+        message: currentLang.value === 'en' ? result.messageEn : result.message,
+        duration: 5000,
+        showClose: true
+      })
+    }
+  } catch (error) {
+    console.error('注册失败:', error)
+    ElMessage.error('注册失败，请稍后重试')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+onMounted(() => {
+  // 初始加载翻译
+  loadTranslations()
+  
+  window.scrollTo(0, 0)
+
+  // 加载公共资源数据
+  if (store && typeof store.dispatch === 'function') {
+    // 检查是否需要加载数据
+    const lastUpdated = store.state.publicResources.lastUpdated;
+    let shouldLoad = false;
+
+    if (!lastUpdated) {
+      // 从未加载过数据
+      shouldLoad = true;
+    } else {
+      // 检查数据是否过期（5分钟内认为是有效的）
+      const lastUpdatedTime = new Date(lastUpdated);
+      const now = new Date();
+      const diffMinutes = (now - lastUpdatedTime) / (1000 * 60);
+      shouldLoad = diffMinutes >= 5;
+    }
+
+    // 如果需要加载数据，则一次性加载所有公共资源
+    if (shouldLoad) {
+      store.dispatch('loadPublicResources');
+    }
+  }
+
+  // 监听语言变化事件
+  window.addEventListener('languagechange', handleLangChange)
+
+  try {
+    const headerBtn = document.querySelector('.header-btn-primary')
+    const slideCtas = Array.from(document.querySelectorAll('.slide-cta'))
+    function handler(e) {
+      console.log('[SupplierPage] fallback CTA click', e.currentTarget?.className)
+      e.preventDefault()
+      openRegisterModal()
+    }
+    if (headerBtn) headerBtn.addEventListener('click', handler)
+    slideCtas.forEach((el) => el.addEventListener('click', handler))
+  } catch (e) {
+    console.warn('failed to attach fallback listeners', e)
+  }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('languagechange', handleLangChange)
+})
+</script>
+
+<style scoped>
+* {
+  box-sizing: border-box;
+}
+
+.supplier-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  background: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 16px;
+}
+
+/* Header */
+.supplier-header {
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-logo a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.header-logo img {
+  height: 40px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-link {
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.header-link:hover {
+  color: #cb261c;
+}
+
+.header-divider {
+  color: #ddd;
+}
+
+.header-btn-primary {
+  background: #cb261c;
+  color: #fff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-weight: 500;
+}
+
+.header-btn-primary:hover {
+  background: #a01f16;
+}
+
+/* Hero Carousel */
+.hero-carousel {
+  padding: 0;
+  margin: 0;
+  background: #fafafa;
+}
+
+.carousel {
+  width: 100%;
+  min-height: 500px;
+}
+
+.carousel-slide {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide-content {
+  max-width: 1280px;
+  width: 100%;
+  padding: 60px 16px;
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  margin: 0 auto;
+}
+
+.slide-left {
+  flex: 1;
+}
+
+.slide-title {
+  font-size: 48px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 20px 0;
+  line-height: 1.3;
+}
+
+.slide-subtitle {
+  font-size: 18px;
+  color: #666;
+  margin: 0 0 30px 0;
+  line-height: 1.6;
+}
+
+.slide-cta {
+  display: inline-block;
+  background: #cb261c;
+  color: #fff;
+  padding: 12px 40px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.slide-cta:hover {
+  background: #a01f16;
+}
+
+.slide-right {
+  flex: 1;
+  text-align: right;
+}
+
+.slide-right img,
+.slide-right .slide-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Company Introduction */
+.company-intro {
+  padding: 80px 16px;
+  background: #fff;
+}
+
+.section-title {
+  font-size: 36px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 40px 0;
+  text-align: left;
+  letter-spacing: 0.5px;
+}
+
+.intro-content {
+  display: flex;
+  gap: 60px;
+  align-items: center;
+}
+
+.intro-text {
+  flex: 1;
+}
+
+.intro-text p {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.8;
+  margin: 0;
+}
+
+.intro-video {
+  flex: 1;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.intro-video video {
+  width: 100%;
+  display: block;
+}
+
+/* Section Title Center */
+.section-title-center {
+  font-size: 36px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 10px 0;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.section-subtitle {
+  font-size: 16px;
+  color: #999;
+  text-align: center;
+  margin: 0 0 50px 0;
+}
+
+/* Advantages */
+.advantages {
+  padding: 80px 16px;
+  background: #fafafa;
+}
+
+.advantages-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.advantage-item {
+  display: flex;
+  align-items: center;
+  gap: 80px;
+  margin-bottom: 100px;
+  background: #fff;
+  padding: 40px;
+  border-radius: 8px;
+}
+
+.advantage-item:last-child {
+  margin-bottom: 0;
+}
+
+.advantage-left {
+  flex: 1;
+}
+
+.advantage-number {
+  font-size: 80px;
+  font-weight: 700;
+  color: #f0f0f0;
+  margin: 0 0 20px 0;
+  line-height: 1;
+}
+
+.advantage-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 20px 0;
+  line-height: 1.4;
+}
+
+.advantage-desc {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.8;
+  margin: 0;
+}
+
+.advantage-right {
+  flex: 1;
+  text-align: center;
+}
+
+.advantage-right img,
+.advantage-right .advantage-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* Qualification */
+.qualification {
+  padding: 80px 16px;
+  background: #fff;
+}
+
+.qualification-content {
+  display: flex;
+  gap: 60px;
+  align-items: flex-start;
+  margin-top: 40px;
+}
+
+.qualification-image {
+  flex: 1;
+}
+
+.qualification-image img,
+.qualification-image .qualification-img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.qualification-text {
+  flex: 1;
+}
+
+.recruitment-badge {
+  display: inline-block;
+  background: #cb261c;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 30px;
+}
+
+.requirements-list {
+  list-style: none;
+  margin: 0 0 30px 0;
+  padding: 0;
+}
+
+.requirements-list li {
+  font-size: 14px;
+  color: #666;
+  line-height: 2;
+  padding-left: 0;
+}
+
+.requirements-list li:before {
+  content: '✓ ';
+  color: #cb261c;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.qualification-cta {
+  background: #cb261c;
+  color: #fff;
+  border: none;
+  padding: 12px 40px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.qualification-cta:hover {
+  background: #a01f16;
+}
+
+/* Categories */
+.categories {
+  padding: 80px 16px;
+  background: #fafafa;
+}
+
+.categories-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 20px;
+  margin-top: 50px;
+}
+
+.category-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  aspect-ratio: 1;
+  cursor: pointer;
+  background: #333;
+  transition: transform 0.3s;
+}
+
+.category-item:hover {
+  transform: scale(1.05);
+}
+
+.category-item img,
+.category-item .category-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.category-title {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  transition: background-color 0.3s;
+}
+
+.category-item:hover .category-title {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* Join CTA Section */
+.join-cta-section {
+  padding: 60px 16px;
+  background: #cb261c;
+  text-align: center;
+  margin: 0;
+}
+
+.join-title {
+  font-size: 36px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 30px 0;
+}
+
+.join-cta-button {
+  background: #fff;
+  color: #cb261c;
+  border: none;
+  padding: 14px 50px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.join-cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Footer */
+.footer {
+  background: #222;
+  color: #ccc;
+  padding: 40px 16px 20px;
+  margin-top: auto;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  margin-bottom: 30px;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+.footer-col {
+  flex: 1;
+}
+
+.footer-logo-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.footer-logo img {
+  height: 40px;
+  width: auto;
+}
+
+.footer-consultation {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.consultation-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.consultation-item img {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+}
+
+.footer-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 15px 0;
+}
+
+.footer-text {
+  font-size: 13px;
+  color: #999;
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.footer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footer-links li {
+  margin-bottom: 8px;
+}
+
+.footer-links a {
+  color: #999;
+  text-decoration: none;
+  font-size: 13px;
+  transition: color 0.3s;
+}
+
+.footer-links a:hover {
+  color: #cb261c;
+}
+
+.footer-bottom {
+  border-top: 1px solid #444;
+  padding-top: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.footer-bottom a {
+  color: #666;
+  text-decoration: none;
+}
+
+.footer-bottom a:hover {
+  color: #cb261c;
+}
+
+/* Floating Panel */
+.floating-panel {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 99;
+}
+
+.floating-item {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #cb261c;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  text-align: center;
+  transition: all 0.3s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.floating-item:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.floating-consult span,
+.floating-join span {
+  font-weight: 500;
+}
+
+.qr-popup {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: #fff;
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 115px;
+  height: 115px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-popup img {
+  width: 100px;
+  height: 100px;
+  display: block;
+  border-radius: 4px;
+  object-fit: cover;
+  aspect-ratio: 1 / 1;
+}
+
+/* Modal Overlay */
+.supplier-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 20px;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.modal-backdrop-bottom {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.modal-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 800px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-close {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 10;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.modal-close:hover {
+  color: #333;
+}
+
+.modal-content {
+  padding: 32px;
+}
+
+/* Modal Steps */
+.modal-steps {
+  list-style: none;
+  margin: 0 0 28px 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  text-align: center;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-step-icon {
+  width: 40px;
+  height: 40px;
+  color: #cb261c;
+  flex-shrink: 0;
+}
+
+.modal-step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.modal-step-desc {
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+}
+
+.modal-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 24px 0;
+  text-align: center;
+}
+
+/* Form Styles */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: #999;
+  margin: -4px 0 0 0;
+  line-height: 1.5;
+}
+
+.form-required {
+  color: #cb261c;
+  margin-left: 2px;
+}
+
+.form-section-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 12px 0;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  padding: 10px 12px;
+  border: 1px solid #e9e9e9;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.3s;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #cb261c;
+}
+
+/* 输入框组合样式（短信验证码）*/
+.form-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* 联系电话、发送验证码、短信验证码三列布局 */
+.form-input-group-inline {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.form-input-phone {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-input-code {
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.form-input-with-btn {
+  flex: 1;
+}
+
+.sms-code-btn {
+  flex-shrink: 0;
+  min-width: 100px;
+  padding: 10px 16px;
+  background: #cb261c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+  white-space: nowrap;
+}
+
+.sms-code-btn:hover:not(:disabled) {
+  background: #a01f16;
+}
+
+.sms-code-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.form-radios {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+}
+
+.radio-input {
+  cursor: pointer;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-submit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 14px 18px;
+  background: #cb261c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-submit:hover {
+  background: #a01f16;
+}
+
+.btn-submit:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* 加载动画 */
+.btn-loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.form-note {
+  font-size: 13px;
+  color: #999;
+  margin: 0;
+}
+
+.form-link {
+  color: #cb261c;
+  text-decoration: none;
+}
+
+.form-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .slide-content {
+    flex-direction: column;
+    padding: 40px 16px;
+    gap: 30px;
+  }
+
+  .slide-title {
+    font-size: 36px;
+  }
+
+  .slide-left,
+  .slide-right {
+    flex: 1;
+    width: 100%;
+  }
+
+  .slide-right {
+    text-align: center;
+  }
+
+  .intro-content {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .advantage-item {
+    flex-direction: column;
+    gap: 30px;
+    padding: 30px;
+  }
+
+  .advantage-number {
+    font-size: 60px;
+  }
+
+  .advantage-title {
+    font-size: 24px;
+  }
+
+  .qualification-content {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+  }
+
+  .footer-content {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+  }
+
+  .form-address {
+    grid-template-columns: 1fr;
+  }
+
+  .form-phone-input,
+  .form-sms-input,
+  .btn-sms {
+    grid-column: unset;
+  }
+
+  .modal-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 12px 8px;
+  }
+
+  .header-actions {
+    gap: 12px;
+  }
+
+  .header-btn-primary {
+    padding: 6px 16px;
+    font-size: 12px;
+  }
+
+  .slide-content {
+    padding: 30px 12px;
+  }
+
+  .slide-title {
+    font-size: 28px;
+  }
+
+  .slide-subtitle {
+    font-size: 14px;
+  }
+
+  .section-title,
+  .section-title-center {
+    font-size: 28px;
+  }
+
+  .company-intro {
+    padding: 40px 16px;
+  }
+
+  .advantage-item {
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+
+  .advantage-number {
+    font-size: 48px;
+  }
+
+  .advantage-title {
+    font-size: 20px;
+  }
+
+  .advantages {
+    padding: 40px 16px;
+  }
+
+  .qualification {
+    padding: 40px 16px;
+  }
+
+  .categories {
+    padding: 40px 16px;
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .join-cta-section {
+    padding: 40px 16px;
+  }
+
+  .join-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .join-cta-button {
+    padding: 10px 30px;
+    font-size: 14px;
+  }
+
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .floating-item {
+    width: 50px;
+    height: 50px;
+    font-size: 11px;
+  }
+
+  .modal-content {
+    padding: 24px;
+  }
+
+  .modal-steps {
+    gap: 16px;
+  }
+
+  .modal-title {
+    font-size: 22px;
+  }
+
+  .form-submit {
+    padding-top: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel {
+    min-height: 350px;
+  }
+
+  .slide-title {
+    font-size: 20px;
+  }
+
+  .slide-subtitle {
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+
+  .slide-cta {
+    padding: 10px 30px;
+    font-size: 14px;
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .section-title,
+  .section-title-center {
+    font-size: 22px;
+  }
+
+  .advantage-number {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+
+  .advantage-title {
+    font-size: 16px;
+  }
+
+  .advantage-desc {
+    font-size: 14px;
+  }
+
+  .floating-item {
+    width: 45px;
+    height: 45px;
+    font-size: 10px;
+  }
+
+  .modal-container {
+    max-width: calc(100% - 40px);
+  }
+
+  .modal-steps {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .form-address,
+  .form-phone {
+    grid-template-columns: 1fr;
+  }
+
+  .form-phone-input,
+  .form-sms-input,
+  .btn-sms {
+    width: 100%;
+  }
+}
+</style>

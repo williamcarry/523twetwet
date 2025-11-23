@@ -1,0 +1,16 @@
+<div {{ vue_component('admin/PromotionMenuList', {
+    'promotionMenus': promotionMenus|map(menu => {
+        'id': menu.id,
+        'categoryId': menu.categoryId,
+        'categoryTitle': menu.category ? menu.category.title : '',
+        'title': menu.title,
+        'titleEn': menu.titleEn,
+        'imageUrl': menu.imageUrl,
+        'isActive': menu.isActive,
+        'createdAt': menu.createdAt|date('Y-m-d H:i:s'),
+        'updatedAt': menu.updatedAt|date('Y-m-d H:i:s')
+    }),
+    'currentPage': currentPage,
+    'totalPages': totalPages,
+    'totalMenus': totalMenus
+}) }}></div>

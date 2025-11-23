@@ -1,0 +1,9 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}横向与楼层菜单管理{% endblock %}
+
+{% block content %}
+<div {{ vue_component('admin/HorizontalMenuManager', {
+    'adminLoginPath': app.request.get('adminLoginPath')
+}) }}></div>
+{% endblock %}

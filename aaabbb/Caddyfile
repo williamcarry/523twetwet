@@ -1,0 +1,30 @@
+{
+    admin off
+    auto_https off
+    persist_config off
+    
+    log {
+        level INFO
+    }
+}
+
+http://localhost:3000 {
+    route {
+        mercure {
+            publisher_jwt !ChangeThisMercureHubJWTSecretKey! {
+                alg HS256
+            }
+            subscriber_jwt !ChangeThisMercureHubJWTSecretKey! {
+                alg HS256
+            }
+            anonymous
+            cors_origins *
+            publish_origins *
+            subscriptions
+            heartbeat_interval 15s
+        }
+        
+        respond /healthz "OK" 200
+        respond "Mercure Hub is running on port 3000" 200
+    }
+}

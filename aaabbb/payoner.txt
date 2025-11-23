@@ -1,0 +1,8 @@
+国内版（派安盈中国官网开发者页面）
+适合国内开发者对接相关服务，链接为：https://www.payoneer.com.cn/developers/ 。该页面会介绍批量资金下发等常用 API 的集成方式，以及如何通过 API 实现收款方注册、资金转账等功能。
+国际版（开发者沙箱与正式环境入口）
+若需测试 API 或对接国际版服务，可通过沙箱环境和正式环境的开发者门户操作：
+沙箱测试环境（用于开发调试）：链接为https://developer.sandbox.payoneer.com/psd2/ ，开发者可在此环境中搭建和测试应用，熟悉账户信息查询、支付发起等 API 的使用。
+正式环境相关 API 调用基础地址：调用开放 API 的正式环境基础地址是https://psd2-api.payoneer.com/ ，授权类 API 的正式环境基础地址为https://login.payoneer.com 。
+国际版特定 API 文档入口
+如需要查看具体 API 的详细规范，可访问例如交易导出 API 的文档页面：https://developer.payoneer.com/orchestration/index.html?api=yaml/export-transactions-api.yaml ，可下载 OpenAPI 规范文件辅助开发。

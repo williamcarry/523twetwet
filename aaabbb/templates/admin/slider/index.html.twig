@@ -1,0 +1,9 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}首页轮播图管理{% endblock %}
+
+{% block body %}
+<div {{ vue_component('admin/SliderManager', {
+    'adminLoginPath': adminLoginPath
+}) }}></div>
+{% endblock %}

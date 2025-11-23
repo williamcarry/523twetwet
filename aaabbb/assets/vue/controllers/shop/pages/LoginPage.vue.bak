@@ -1,0 +1,633 @@
+<!--
+CSS 引用说明：
+1. 全局样式：在 src/main.ts 中自动加载
+   - src/assets/main.css (导入 src/assets/base.css)
+     - @tailwind base, components, utilities (Tailwind CSS)
+     - 全局 CSS 变量 (--color-*, --section-gap, --category-width 等)
+   - Element Plus 样式 (element-plus/dist/index.css)
+2. 页面局部样式：该文件底部的 <style scoped> 块
+3. 导入的子组件样式：由各子组件的 <style scoped> 块提供
+-->
+<template>
+  <div class="login-page">
+    <!-- 使用登录注册专用的头部 -->
+    <LoginRegistorHeader />
+
+    <main class="login-main">
+      <div class="login-hero-wrap">
+        <section class="login-hero">
+          <transition-group name="fade" tag="div" class="login-hero__stage">
+            <img
+              v-for="(src, i) in slides"
+              :key="src + ':' + i + ':' + index"
+              v-show="i === index"
+              class="login-hero__image"
+              :src="src"
+              :alt="t('login.altBanner')"
+              @error="onHeroError"
+            />
+          </transition-group>
+
+          <div class="login-hero__inner">
+            <button class="login-hero__arrow" type="button" :aria-label="t('login.altPrevSlide')" @click="prev">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.3" /><path d="M13.8 8.5 10.3 12l3.5 3.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" /></svg>
+            </button>
+            <button class="login-hero__arrow login-hero__arrow--right" type="button" :aria-label="t('login.altNextSlide')" @click="next">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.3" /><path d="M10.2 8.5 13.7 12l-3.5 3.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" /></svg>
+            </button>
+
+            <div class="login-card">
+              <h1>{{ t('login.title') }}</h1>
+              <form @submit.prevent="submit">
+                <label class="login-input">
+                  <img src="/frondend/images/LoginPage/user.png" :alt="t('login.altAccount')" />
+                  <input v-model="account" type="text" :placeholder="t('login.accountPlaceholder')" required />
+                </label>
+
+                <label class="login-input">
+                  <img src="/frondend/images/LoginPage/password.png" :alt="t('login.altPassword')" />
+                  <input :type="showPassword ? 'text' : 'password'" v-model="password" :placeholder="t('login.passwordPlaceholder')" required />
+                  <button type="button" class="password-toggle" @click="togglePassword">
+                    <img
+                      :src="showPassword ? visibleIcon : hiddenIcon"
+                      :alt="showPassword ? t('login.altHidePassword') : t('login.altShowPassword')"
+                    />
+                  </button>
+                </label>
+
+                <div class="login-input login-input--captcha">
+                  <img :src="captchaIcon" :alt="t('login.altCaptcha')" />
+                  <input
+                    v-model="captchaInput"
+                    type="text"
+                    :placeholder="t('login.captchaPlaceholder')"
+                    :aria-label="t('login.captchaPlaceholder')"
+                    autocomplete="off"
+                    inputmode="text"
+                    maxlength="6"
+                    required
+                  />
+                  <div class="login-captcha__visual">
+                    <img
+                      :key="captchaKey"
+                      class="captcha-image"
+                      :src="`/shop/api/auth/captcha?t=${captchaKey}`"
+                      :alt="t('login.captchaAlt')"
+                      @click="refreshCaptcha"
+                      style="cursor: pointer;"
+                    />
+                  </div>
+                </div>
+
+                <!-- 错误信息显示 -->
+                <div v-if="errorMessage" class="login-error">
+                  {{ errorMessage }}
+                </div>
+
+                <button type="submit" class="login-submit" :disabled="isLoading">
+                  {{ isLoading ? t('login.loading') : t('login.submit') }}
+                </button>
+
+                <div class="login-links">
+                  <a href="/user/forget-password.html">{{ t('login.forgot') }}</a>
+                  <a href="/register">{{ t('login.register') }}</a>
+                </div>
+              </form>
+            </div>
+
+            <div class="login-hero__dots" aria-hidden="true">
+              <span v-for="(s, i) in slides" :key="'dot-' + i" :class="i === index ? 'is-active' : ''" @click="go(i)"></span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- 使用公用的网站底部 -->
+    <SiteFooter />
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+import LoginRegistorHeader from '../components/LoginRegistorHeader.vue'
+import SiteFooter from '../components/SiteFooter.vue'
+import encryptionService from '../data/encryption-service.js'
+import apiSignature from '../services/apiSignature.js'
+
+// 从window对象获取store实例
+const store = window.vueStore
+
+const account = ref('')
+const password = ref('')
+const showPassword = ref(false)
+const captchaInput = ref('')
+const captchaKey = ref(Date.now())
+const isLoading = ref(false)
+const errorMessage = ref('')
+const captchaIcon =
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23cb261c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12l2.4 2.3 4.6-4.1"/></svg>'
+
+// 刷新验证码
+function refreshCaptcha() {
+  captchaKey.value = Date.now()
+}
+
+const slides = [
+  '/frondend/images/LoginPage/banner1.png',
+  '/frondend/images/LoginPage/banner2.jpg',
+  '/frondend/images/LoginPage/banner_fallback.jpg',
+]
+const index = ref(0)
+let timer
+
+const fallbackHero = '/frondend/images/LoginPage/banner_fallback.jpg'
+const visibleIcon = '/frondend/images/LoginPage/visible.png'
+const hiddenIcon = '/frondend/images/LoginPage/invisible.png'
+
+// 页面翻译数据
+const translations = ref({})
+
+// 当前语言
+const currentLang = ref('zh-CN')
+
+const loadTranslations = async () => {
+  try {
+    const response = await fetch('/frondend/lang/LoginPage.json')
+    const data = await response.json()
+    translations.value = data
+  } catch (error) {
+    // 翻译文件加载失败
+  }
+}
+
+// 翻译函数 - 直接从页面特定的JSON文件读取
+const t = (key) => {
+  // 优先从localStorage获取语言，确保与全局语言设置一致
+  const lang = localStorage.getItem('app.lang') || currentLang.value
+  
+  if (translations.value[lang] && translations.value[lang][key]) {
+    return translations.value[lang][key]
+  }
+  
+  return key
+}
+
+// 更新页面标题
+const updatePageTitle = () => {
+  const title = t('pageTitle')
+  if (title && title !== 'pageTitle') {
+    document.title = title
+  }
+}
+
+const handleLangChange = (event) => {
+  if (event.detail && event.detail.lang) {
+    currentLang.value = event.detail.lang
+  }
+  loadTranslations()
+  // 更新页面标题
+  updatePageTitle()
+}
+
+function togglePassword() {
+  showPassword.value = !showPassword.value
+}
+
+function onHeroError(event) {
+  const target = event.target
+  if (target && target.src !== fallbackHero) {
+    target.src = fallbackHero
+  }
+}
+
+function startAuto() {
+  stopAuto()
+  if (slides.length > 1) {
+    timer = window.setInterval(() => {
+      index.value = (index.value + 1) % slides.length
+    }, 4500)
+  }
+}
+
+function stopAuto() {
+  if (timer) {
+    window.clearInterval(timer)
+    timer = undefined
+  }
+}
+
+function prev() {
+  index.value = (index.value - 1 + slides.length) % slides.length
+}
+
+function next() {
+  index.value = (index.value + 1) % slides.length
+}
+
+function go(i) {
+  index.value = i % slides.length
+}
+
+function submit() {
+  errorMessage.value = ''
+  
+  if (!account.value.trim()) {
+    errorMessage.value = t('login.accountRequired')
+    return
+  }
+  
+  if (!password.value.trim()) {
+    errorMessage.value = t('login.passwordRequired')
+    return
+  }
+  
+  const normalized = captchaInput.value.replace(/\s+/g, '').toUpperCase()
+  if (!normalized) {
+    errorMessage.value = t('login.captchaRequired')
+    return
+  }
+  
+  isLoading.value = true
+  
+  // 准备登录数据
+  const loginData = {
+    account: account.value.trim(),
+    password: password.value,
+    captcha: normalized
+  }
+  
+  // 使用整个JSON对象加密（与支付接口保持一致）
+  const encryptedData = encryptionService.prepareData(loginData, true)
+  
+  fetch('/shop/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',  // 允许接收 Set-Cookie
+    body: JSON.stringify(encryptedData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    isLoading.value = false
+    
+    if (data.success) {
+      store.commit('SET_USER', data.user)
+      
+      // 保存API签名密钥
+      if (data.apiSignKey) {
+        apiSignature.setKey(data.apiSignKey)
+      }
+      
+      // 启动 Token 自动刷新（2小时有效期）
+      import('../plugins/globalFetch').then(({ startTokenAutoRefresh }) => {
+        startTokenAutoRefresh(store, 7200)
+        console.log('✅ Token 自动刷新已启动')
+      })
+      
+      // 检查是否有重定向参数
+      const urlParams = new URLSearchParams(window.location.search)
+      const redirectUrl = urlParams.get('redirect')
+      
+      if (redirectUrl) {
+        // 如果有重定向参数，跳转到指定页面
+        window.location.href = decodeURIComponent(redirectUrl)
+      } else {
+        // 否则跳转到用户中心
+        window.location.href = '/user-center'
+      }
+    } else {
+      // 根据语言显示错误消息
+      const lang = currentLang.value
+      errorMessage.value = (lang === 'en' ? data.messageEn : data.message) || t('login.failed')
+      refreshCaptcha()
+      captchaInput.value = ''
+    }
+  })
+  .catch(error => {
+    isLoading.value = false
+    errorMessage.value = t('login.requestFailed')
+    refreshCaptcha()
+  })
+}
+
+onMounted(() => {
+  const store = window.vueStore
+  if (store && store.state && store.state.isLoggedIn) {
+    window.location.href = '/'
+    return
+  }
+  
+  // 先设置当前语言，再加载翻译
+  const savedLang = localStorage.getItem('app.lang')
+  if (savedLang) {
+    currentLang.value = savedLang
+  }
+  
+  loadTranslations().then(() => {
+    // 翻译加载完成后设置标题
+    updatePageTitle()
+  })
+  
+  startAuto()
+  
+  window.addEventListener('languagechange', handleLangChange)
+})
+
+onUnmounted(() => {
+  stopAuto()
+  window.removeEventListener('languagechange', handleLangChange)
+})
+</script>
+
+<style scoped>
+.login-page {
+  min-height: 100vh;
+  background-color: #ffffff;
+  color: #2d2d2d;
+  display: flex;
+  flex-direction: column;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Header 样式已移至 SiteHeader 组件 */
+
+.login-main {
+  padding: 36px 0 0px;
+  flex: 1;
+}
+
+.login-hero {
+  position: relative;
+  height: 540px;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+}
+
+.login-hero__stage {
+  position: absolute;
+  inset: 0;
+}
+
+.login-hero__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.login-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(24, 8, 1, 0.68) 0%, rgba(24, 8, 1, 0.38) 44%, rgba(24, 8, 1, 0.08) 82%);
+  pointer-events: none;
+}
+
+.login-hero__arrow {
+  position: absolute;
+  left: 34px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 49px;
+  height: 49px;
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  z-index: 3;
+  cursor: pointer;
+}
+.login-hero__arrow--right {
+  left: auto;
+  right: 34px;
+}
+
+.login-hero__arrow svg {
+  width: 62%;
+  height: 62%;
+}
+
+.login-hero__arrow:hover {
+  color: #9ca3af;
+}
+
+.login-hero__dots {
+  position: absolute;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 3;
+}
+
+.login-hero__dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+}
+
+.login-hero__dots .is-active {
+  width: 12px;
+  height: 12px;
+  background-color: #ffb400;
+}
+
+.login-card {
+  position: absolute;
+  right: 200px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 420px;
+  padding: 22px 24px 20px;
+  background-color: rgba(255, 255, 255, 0.97);
+  border-radius: 18px;
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.25);
+  z-index: 4;
+  backdrop-filter: blur(4px);
+}
+
+.login-card h1 {
+  text-align: left;
+  font-size: 24px;
+  line-height: 1.3;
+  font-weight: 600;
+  color: #cb261c;
+  margin-bottom: 14px;
+}
+
+.login-input {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #ffffff;
+  margin-bottom: 14px;
+}
+
+.login-input img {
+  width: 20px;
+  height: 20px;
+}
+
+.login-input input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #111827;
+}
+
+.password-toggle {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.password-toggle img {
+  width: 20px;
+  height: 20px;
+}
+
+.login-input--captcha {
+  align-items: center;
+  padding-right: 4px;
+}
+
+.login-input--captcha input {
+  min-width: 0;
+}
+
+.login-captcha__visual {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.login-input .captcha-image {
+  width: 108px;
+  height: 40px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(203, 38, 28, 0.18);
+  cursor: pointer;
+  background-color: #fdf8f6;
+  transition: opacity 0.2s ease;
+}
+
+.login-input .captcha-image:hover {
+  opacity: 0.8;
+}
+
+.login-error {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #dc2626;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.login-submit {
+  width: 100%;
+  margin-top: 4px;
+  height: 46px;
+  border: none;
+  border-radius: 6px;
+  background-color: #cb261c;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.login-submit:hover {
+  background-color: #b02118;
+}
+
+.login-links {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.login-links a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.login-links a:hover {
+  color: #cb261c;
+}
+
+/* Footer 样式已移至 SiteFooter 组件 */
+/* 登录页面Footer样式覆盖 */
+:deep(footer) {
+  background-color: #ffffff !important;
+  color: #2d2d2d !important;
+}
+
+:deep(footer h3) {
+  color: #1f2937 !important;
+}
+
+:deep(footer a) {
+  color: #4b5563 !important;
+}
+
+:deep(footer a:hover) {
+  color: #cb261c !important;
+}
+
+:deep(footer .text-slate-200),
+:deep(footer .text-slate-300),
+:deep(footer .text-slate-500) {
+  color: #6b7280 !important;
+}
+
+:deep(footer .border-white\/10) {
+  border-color: #e5e7eb !important;
+}
+
+@media (max-width: 1280px) {
+  .login-container {
+    width: 100%;
+    padding: 0 24px;
+  }
+
+  .login-hero {
+    height: 560px;
+  }
+
+  .login-card {
+    right: 162px;
+  }
+}
+
+/* transitions for carousel */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.6s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

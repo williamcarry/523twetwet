@@ -1,0 +1,308 @@
+<template>
+  <div class="min-h-screen flex flex-col bg-white">
+    <SiteHeader />
+
+    <!-- 分类内容 -->
+    <main class="flex-1 bg-white">
+      <div class="container">
+        <!-- 左边菜单容器 -->
+        <div class="menu-container">
+          <!-- 一级分类循环 -->
+          <div v-for="category in categories" :key="category.key">
+            <!-- 一级分类标题 -->
+            <h3 class="category-title-heading">
+              <a 
+                href="javascript:void(0)" 
+                @click.prevent="navigateToCategory(category.id, null, null)" 
+                class="category-title-link"
+              >
+                {{ getCategoryTitle(category) }}
+              </a>
+            </h3>
+
+            <!-- 分类内容容器 -->
+            <div class="category-content">
+              <!-- 每个子分类 -->
+              <div v-for="(subCat, idx) in category.children" :key="category.key + '-' + idx" class="category-group">
+                <!-- 子分类标题 -->
+                <div 
+                  class="category-label"
+                  @click.prevent="navigateToCategory(category.id, subCat.id, null)"
+                  style="cursor: pointer;"
+                >
+                  {{ getSubCategoryTitle(subCat) }}
+                </div>
+                <!-- 箭头 -->
+                <div class="arrow-icon">></div>
+                <!-- 子分类项列表 -->
+                <div class="subcategories">
+                  <a
+                    v-for="(item, i) in subCat.items"
+                    :key="category.key + '-item-' + idx + '-' + i"
+                    href="javascript:void(0)"
+                    @click.prevent="navigateToCategory(category.id, subCat.id, item.id)"
+                    class="subcategory-link"
+                  >
+                    {{ getItemTitle(item) }}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <RightFloatNav />
+    <SiteFooter />
+  </div>
+</template>
+
+<script setup>
+import { reactive, markRaw, ref, onMounted, onUnmounted, computed } from 'vue'
+import SiteHeader from '@/components/SiteHeader.vue'
+import SiteFooter from '@/components/SiteFooter.vue'
+import RightFloatNav from '@/components/RightFloatNav.vue'
+import {
+  Home,
+  Sprout,
+  Music,
+  Mountain,
+  Plug,
+  Cog,
+  HeartPulse,
+  Briefcase,
+  PawPrint,
+  Puzzle,
+  Car,
+  ShoppingBag,
+  Headphones,
+  ChevronRight,
+} from 'lucide-vue-next'
+
+// 初始化分类数据
+const categories = reactive([])
+
+// 页面翻译数据
+const translations = ref({})
+
+// 当前语言
+const currentLang = ref('zh-CN')
+
+// 加载翻译文件
+const loadTranslations = async () => {
+  try {
+    const response = await fetch('/frondend/lang/AllCategoriesPage.json')
+    const data = await response.json()
+    translations.value = data
+  } catch (error) {
+    console.error('Failed to load translations:', error)
+  }
+}
+
+// 翻译函数 - 直接从页面特定的JSON文件读取
+const t = (key) => {
+  // 获取当前语言，优先从lstorage获取，否则使用默认值
+  const lang = localStorage.getItem('app.lang') || currentLang.value
+  
+  // 从页面特定的翻译文件中获取翻译
+  if (translations.value[lang] && translations.value[lang][key]) {
+    return translations.value[lang][key]
+  }
+  
+  // 如果没有找到翻译，返回键名
+  return key
+}
+
+// 更新页面标题
+const updatePageTitle = () => {
+  const title = t('pageTitle')
+  if (title && title !== 'pageTitle') {
+    document.title = title
+  }
+}
+
+// 获取当前语言环境
+const currentLanguage = computed(() => {
+  return currentLang.value
+})
+
+// 根据语言获取分类标题
+const getCategoryTitle = (category) => {
+  return currentLanguage.value === 'en' ? (category.titleEn || category.title) : category.title
+}
+
+// 根据语言获取子分类标题
+const getSubCategoryTitle = (subCategory) => {
+  return currentLanguage.value === 'en' ? (subCategory.titleEn || subCategory.title) : subCategory.title
+}
+
+// 根据语言获取项目标题
+const getItemTitle = (item) => {
+  return currentLanguage.value === 'en' ? (item.titleEn || item.title) : item.title
+}
+
+// 导航到分类商品页面
+const navigateToCategory = (categoryId, subcategoryId, itemId) => {
+  // 构建 URL 参数
+  const params = new URLSearchParams()
+  
+  if (itemId) {
+    // 三级分类：只带 itemId
+    params.append('itemId', itemId)
+  } else if (subcategoryId) {
+    // 二级分类：只带 subcategoryId
+    params.append('subcategoryId', subcategoryId)
+  } else if (categoryId) {
+    // 一级分类：只带 categoryId
+    params.append('categoryId', categoryId)
+  }
+  
+  // 在新标签中打开商品页面
+  const url = `/all-categories-products?${params.toString()}`
+  window.open(url, '_blank')
+}
+
+// 从API获取分类数据
+const fetchCategories = async () => {
+  try {
+    const response = await fetch('/shop/api/home/all-categories')
+    const result = await response.json()
+    
+    if (result.success && result.data.categories) {
+      // 清空现有数据
+      categories.splice(0, categories.length)
+      
+      // 添加从API获取的数据
+      result.data.categories.forEach(category => {
+        categories.push(category)
+      })
+    }
+  } catch (error) {
+    console.error('获取分类数据失败:', error)
+  }
+}
+
+// 监听语言变化事件
+const handleLangChange = (event) => {
+  if (event.detail && event.detail.lang) {
+    currentLang.value = event.detail.lang
+  }
+  // 重新加载翻译以确保语言切换时更新
+  loadTranslations()
+  // 更新页面标题
+  updatePageTitle()
+}
+
+// 在组件挂载时获取分类数据
+onMounted(() => {
+  // 初始化当前语言
+  currentLang.value = localStorage.getItem('app.lang') || 'zh-CN'
+  
+  // 初始加载翻译
+  loadTranslations().then(() => {
+    // 翻译加载完成后设置标题
+    updatePageTitle()
+  })
+  
+  // 获取分类数据
+  fetchCategories()
+  
+  // 监听语言变化事件
+  window.addEventListener('languagechange', handleLangChange)
+})
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+  window.removeEventListener('languagechange', handleLangChange)
+})
+</script>
+
+<style scoped>
+.container {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.menu-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.category-title-heading {
+  border-bottom: 3px solid #cb261c;
+  color: #cb261c;
+  font-family: 'Nunito Sans ExtraBold', 'Open Sans Bold', sans-serif;
+  font-size: 18px;
+  line-height: 36px;
+  padding-bottom: 16px;
+  padding-top: 8px;
+  margin: 0 0 20px 0;
+}
+
+.category-title-link {
+  color: #111111;
+  text-decoration: none;
+  transition-duration: 0.3s;
+}
+
+.category-title-link:hover {
+  color: #111111;
+}
+
+.category-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 30px;
+}
+
+.category-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.category-label {
+  font-weight: bold;
+  color: #333;
+  width: auto;
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 22px;
+}
+
+.arrow-icon {
+  color: #999;
+  flex-shrink: 0;
+  font-size: 12px;
+  margin-left: 0;
+  margin-top: 5px;
+}
+
+.subcategories {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 15px;
+  align-content: flex-start;
+}
+
+.subcategory-link {
+  color: #555;
+  text-decoration: none;
+  transition-duration: 0.3s;
+  line-height: 22px;
+}
+
+.subcategory-link:hover {
+  color: #cb261c;
+}
+
+</style>

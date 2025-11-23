@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {# 供应商后台样式入口 - 包含 supplier.css #}
+    {{ encore_entry_link_tags('supplier') }}
+{% endblock %}
+
+{% block javascripts %}
+    {# 供应商后台脚本入口 #}
+    {{ encore_entry_script_tags('supplier') }}
+{% endblock %}
+
+{% block body %}
+{% if is_granted('ROLE_SUPPLIER') %}
+    {% set current_supplier = app.user %}
+    {% set supplier_data = {
+        'username': current_supplier.username,
+        'email': current_supplier.email,
+        'customerId': current_supplier.customerId
+    } %}
+    
+    {# 检查用户类型并设置相应的供应商数据 #}
+    {% if attribute(current_supplier, 'getContactPerson') is defined %}
+        {# 主账号 #}
+        {% set supplier_data = supplier_data|merge({
+            'contactPerson': current_supplier.contactPerson,
+            'companyName': current_supplier.companyName,
+            'phoneNumber': current_supplier.contactPhone,
+            'address': current_supplier.contactAddress,
+            'customerId': current_supplier.customerId
+        }) %}
+        {% set has_supplier_super_role = is_granted('ROLE_SUPPLIER_SUPER') %}
+        {% set has_supplier_balance_role = is_granted('ROLE_SUPPLIER_BALANCE') %}
+        {% set has_supplier_product_role = is_granted('ROLE_SUPPLIER_PRODUCT') %}
+        {% set has_supplier_order_role = is_granted('ROLE_SUPPLIER_ORDER') %}
+    {% else %}
+        {# 子账号 #}
+        {% set main_supplier = current_supplier.supplier %}
+        {% if main_supplier %}
+            {% set supplier_data = supplier_data|merge({
+                'contactPerson': main_supplier.contactPerson,
+                'companyName': main_supplier.companyName,
+                'phoneNumber': main_supplier.contactPhone,
+                'address': main_supplier.contactAddress,
+                'customerId': main_supplier.customerId
+            }) %}
+        {% endif %}
+        {% set has_supplier_super_role = false %}
+        {% set has_supplier_balance_role = is_granted('ROLE_SUPPLIER_BALANCE') %}
+        {% set has_supplier_product_role = is_granted('ROLE_SUPPLIER_PRODUCT') %}
+        {% set has_supplier_order_role = is_granted('ROLE_SUPPLIER_ORDER') %}
+    {% endif %}
+    
+    {# 调试信息 #}
+    <!-- DEBUG: User type: {{ attribute(current_supplier, 'getContactPerson') is defined ? 'Main Account' : 'Sub Account' }} -->
+    <!-- DEBUG: Has ROLE_SUPPLIER_SUPER: {{ has_supplier_super_role ? 'Yes' : 'No' }} -->
+    <!-- DEBUG: Has ROLE_SUPPLIER_BALANCE: {{ has_supplier_balance_role ? 'Yes' : 'No' }} -->
+    
+    <div {{ vue_component('supplier/SupplierLayout', {
+        'currentSupplier': supplier_data,
+        'supplierLoginPath': app.request.get('supplierLoginPath'),
+        'hasSupplierSuperRole': has_supplier_super_role,
+        'hasSupplierBalanceRole': has_supplier_balance_role,
+        'hasSupplierProductRole': has_supplier_product_role,
+        'hasSupplierOrderRole': has_supplier_order_role
+    }) }}></div>
+    {% block content %}{% endblock %}
+{% else %}
+    <div class="alert alert-warning">
+        需要登录才能访问此页面
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}编辑询价单{% endblock %}
+
+{% block stylesheets %}
+    {{ encore_entry_link_tags('admin') }}
+{% endblock %}
+
+{% block javascripts %}
+    {{ encore_entry_script_tags('admin') }}
+{% endblock %}
+
+{% block body %}
+<div {{ vue_component('admin/ProductInquiryEdit', {
+    'adminLoginPath': adminLoginPath,
+    'inquiryId': inquiryId
+}) }}></div>
+{% endblock %}
